@@ -1,0 +1,77 @@
+{% from '_macros.html' import icon, csrf %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% block title %}{{ title|default('Inicio') }}{% endblock %} · Prácticas Profesionalizantes</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%231e3a5f'/%3E%3Cpath d='M7 17V7h5a3 3 0 0 1 0 6H7' stroke='white' stroke-width='2' fill='none'/%3E%3C/svg%3E">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-logo">PP</div>
+      <div class="brand-text"><strong>Prácticas Profesionalizantes</strong><span>{{ escuela.get('escuela_nombre', '') }}</span></div>
+    </div>
+    <nav class="nav" aria-label="Menú principal">
+      {% set items = [
+        ('main.inicio', 'home', 'Inicio / Dashboard', 'practicas.ver'),
+        ('alumnos.lista', 'users', 'Alumnos', 'alumnos.ver'),
+        ('empresas.lista', 'briefcase', 'Empresas', 'empresas.ver'),
+        ('practicas.lista', 'clipboard', 'Prácticas Profesionalizantes', 'practicas.ver'),
+        ('seguimiento.inicio', 'clock', 'Seguimiento y asistencia', 'seguimiento.ver'),
+        ('documentos.lista', 'folder', 'Documentación', 'documentos.ver'),
+        ('docentes.lista', 'usercheck', 'Docentes y tutores', 'docentes.ver'),
+        ('evaluaciones.inicio', 'award', 'Evaluaciones', 'evaluaciones.ver'),
+        ('informes.inicio', 'chart', 'Informes y estadísticas', 'informes.ver'),
+        ('usuarios.lista', 'shield', 'Usuarios', 'usuarios.ver'),
+        ('admin.configuracion', 'settings', 'Configuración', 'catalogos.ver'),
+      ] %}
+      {% for ep, ico, label, perm in items %}
+        {% if can(perm) or (ep == 'admin.configuracion' and can('configuracion.ver')) %}
+        <a href="{{ url_for(ep) }}" class="nav-item {% if request.endpoint and (request.endpoint == ep or request.blueprint == ep.split('.')[0]) %}active{% endif %}">
+          {{ icon(ico, 19) }}<span>{{ label }}</span>
+        </a>
+        {% endif %}
+      {% endfor %}
+    </nav>
+    <div class="sidebar-foot">Ciclo lectivo activo: <strong>{{ ciclo_activo.anio if ciclo_activo else '—' }}</strong><br>v{{ version }}</div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-toggle" id="menu-toggle" aria-label="Abrir menú" type="button">{{ icon('menu', 22) }}</button>
+      <form class="search" action="{{ url_for('main.buscar') }}" method="get" role="search">
+        {{ icon('search', 17) }}
+        <input type="search" name="q" placeholder="Buscar alumno, DNI, empresa, práctica…" value="{{ request.args.get('q', '') if request.endpoint == 'main.buscar' else '' }}" aria-label="Búsqueda global">
+      </form>
+      <div class="topbar-right">
+        {% if can('practicas.ver') %}
+        <a class="icon-btn bell" href="{{ url_for('main.alertas') }}" title="Alertas" aria-label="Alertas">
+          {{ icon('bell', 21) }}{% set n = alert_count() %}{% if n %}<span class="bell-count">{{ n if n < 100 else '99+' }}</span>{% endif %}
+        </a>
+        {% endif %}
+        <div class="user-menu">
+          <div class="user-info"><strong>{{ g.user.nombre }}</strong><span>{{ g.user.rol_nombre }}</span></div>
+          <a class="icon-btn" href="{{ url_for('auth.cambiar_clave') }}" title="Cambiar contraseña" aria-label="Cambiar contraseña">{{ icon('shield', 20) }}</a>
+          <form method="post" action="{{ url_for('auth.logout') }}" class="inline">{{ csrf() }}
+            <button class="icon-btn" type="submit" title="Cerrar sesión" aria-label="Cerrar sesión">{{ icon('logout', 20) }}</button>
+          </form>
+        </div>
+      </div>
+    </header>
+    <main class="content" id="content">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}<div class="flash flash-{{ cat }}" role="alert">{{ msg }}</div>{% endfor %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</body>
+</html>

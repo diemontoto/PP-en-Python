@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon, tabla_ap, post_button %}
+{% set title = a.apellido ~ ', ' ~ a.nombre %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ a.apellido }}, {{ a.nombre }}</h1>
+    <p class="muted">Legajo {{ a.legajo }} · DNI {{ a.dni }} · {{ a.curso }} {{ a.division or '' }} {% if a.especialidad %}· {{ a.especialidad }}{% endif %}</p>
+  </div>
+  <div class="head-actions">
+    <a class="btn" href="{{ url_for('alumnos.ficha_pdf', id=a.id) }}" target="_blank">{{ icon('file', 16) }} Ficha PDF</a>
+    {% if can('alumnos.editar') %}<a class="btn" href="{{ url_for('alumnos.editar', id=a.id) }}">{{ icon('edit', 16) }} Editar</a>{% endif %}
+    {% if can('practicas.editar') %}<a class="btn btn-primary" href="{{ url_for('practicas.nuevo') }}">{{ icon('plus', 16) }} Nueva práctica</a>{% endif %}
+    <a class="btn" href="{{ url_for('alumnos.lista') }}">{{ icon('back', 16) }} Listado</a>
+  </div>
+</div>
+
+<div class="grid cols-2">
+  <div class="card">
+    <h2>Datos personales</h2>
+    <dl class="kv">
+      <dt>Estado académico</dt><dd>{{ a.estado_academico|badge }}</dd>
+      <dt>Fecha de nacimiento</dt><dd>{{ a.fecha_nacimiento|fecha }}{% if edad is not none %} ({{ edad }} años){% endif %}</dd>
+      <dt>Domicilio</dt><dd>{{ a.domicilio or '—' }}</dd>
+      <dt>Teléfono</dt><dd>{{ a.telefono or '—' }}</dd>
+      <dt>Correo electrónico</dt><dd>{{ a.email or '—' }}</dd>
+      <dt>Año de cursada</dt><dd>{{ a.ciclo or '—' }}</dd>
+      <dt>Observaciones</dt><dd>{{ a.observaciones or '—' }}</dd>
+    </dl>
+  </div>
+  <div class="card">
+    <h2>Responsable / tutor legal</h2>
+    <dl class="kv">
+      <dt>Nombre</dt><dd>{{ a.tutor_legal_nombre or '—' }}</dd>
+      <dt>Parentesco</dt><dd>{{ a.tutor_legal_parentesco or '—' }}</dd>
+      <dt>Teléfono</dt><dd>{{ a.tutor_legal_telefono or '—' }}</dd>
+      <dt>Correo electrónico</dt><dd>{{ a.tutor_legal_email or '—' }}</dd>
+    </dl>
+    <h3 style="margin-top:1rem">Docentes tutores asignados</h3>
+    {% if tutores %}<ul class="plain">{% for t in tutores %}<li>{{ t.nombre }} <span class="muted">({{ t.anio }})</span></li>{% endfor %}</ul>
+    {% else %}<p class="muted">Sin tutor asignado.</p>{% endif %}
+  </div>
+</div>
+
+<div class="card flush">
+  <h2 style="padding:1rem 1.2rem 0">Historial de prácticas profesionalizantes</h2>
+  {{ tabla_ap(practicas, mostrar_alumno=False) }}
+</div>
+
+<div class="card">
+  <h2>Documentación del alumno
+    {% if can('documentos.editar') %}<a class="btn btn-sm" href="{{ url_for('documentos.nuevo', alumno_id=a.id, next=request.path) }}">{{ icon('upload', 14) }} Subir documento</a>{% endif %}</h2>
+  {% if docs %}
+  <div class="table-wrap"><table class="table compact"><thead><tr><th>Tipo</th><th>Archivo</th><th>Estado</th><th>Vence</th><th>Cargado</th></tr></thead><tbody>
+    {% for d in docs %}<tr><td>{{ d.tipo }}</td><td><a href="{{ url_for('documentos.descargar', id=d.id) }}">{{ d.nombre_original }}</a></td>
+      <td>{{ d.estado|badge }}</td><td>{{ d.vencimiento|fecha }}</td><td>{{ d.creado_en|fechahora }}</td></tr>{% endfor %}
+  </tbody></table></div>
+  {% else %}<p class="muted">Sin documentos cargados.</p>{% endif %}
+</div>
+
+{% if historial %}
+<div class="card">
+  <h2>Historial de cambios</h2>
+  <div class="table-wrap"><table class="table compact"><thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Detalle</th></tr></thead><tbody>
+    {% for h in historial %}<tr><td>{{ h.fecha|fechahora }}</td><td>{{ h.usuario_nombre or '—' }}</td><td>{{ h.accion }}</td><td class="diff">{{ (h.detalle or '')[:300] }}</td></tr>{% endfor %}
+  </tbody></table></div>
+</div>
+{% endif %}
+{% endblock %}

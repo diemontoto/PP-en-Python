@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon, csrf %}
+{% set title = 'Revisar documento' %}
+{% block content %}
+<div class="page-head"><div><h1>Revisar documento</h1><p class="muted">{{ d.tipo }} · {{ d.nombre_original }}</p></div>
+  <div class="head-actions"><a class="btn" href="{{ url_for('documentos.descargar', id=d.id) }}">{{ icon('download', 15) }} Descargar</a><a class="btn" href="{{ next }}">{{ icon('back', 15) }} Volver</a></div></div>
+<form method="post" class="card narrow">{{ csrf() }}<input type="hidden" name="next" value="{{ next }}">
+  <div class="form-grid one">
+    <div class="field"><label>Estado de la revisión</label><select name="estado">{% for e in estados %}<option {% if e == d.estado %}selected{% endif %}>{{ e }}</option>{% endfor %}</select></div>
+    <div class="field"><label>Vencimiento</label><input type="date" name="vencimiento" value="{{ d.vencimiento or '' }}"></div>
+    <div class="field"><label>Observaciones</label><textarea name="observaciones" rows="3" maxlength="500">{{ d.observaciones or '' }}</textarea><small class="help">Obligatorias si el documento queda «Observado».</small></div>
+  </div>
+  <div class="form-actions"><button class="btn btn-primary" type="submit">{{ icon('check', 16) }} Guardar</button></div>
+</form>
+{% endblock %}

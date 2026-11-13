@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon, csrf, post_button, progress, doc_indicator %}
+{% set title = 'Práctica ' ~ p.numero %}
+{% block content %}
+<div class="page-head">
+  <div><h1>{{ p.numero }} · {{ p.proyecto }}</h1>
+    <p class="muted">Ciclo {{ p.anio }} · <a href="{{ url_for('empresas.ficha', id=p.empresa_id) }}">{{ p.empresa }}</a> · {{ p.estado|badge }}</p></div>
+  <div class="head-actions">
+    {% if can('seguimiento.editar') %}<a class="btn" href="{{ url_for('seguimiento.dia', practica_id=p.id) }}">{{ icon('calendar', 16) }} Asistencia del día</a>{% endif %}
+    {% if can('practicas.editar') %}<a class="btn" href="{{ url_for('practicas.editar', id=p.id) }}">{{ icon('edit', 16) }} Editar</a>{% endif %}
+    {% if can('practicas.eliminar') %}{{ post_button(url_for('practicas.baja', id=p.id), 'Dar de baja', 'trash', 'btn btn-danger-outline', '¿Dar de baja esta práctica?') }}{% endif %}
+    <a class="btn" href="{{ url_for('practicas.lista') }}">{{ icon('back', 16) }} Listado</a>
+  </div>
+</div>
+
+<div class="grid cols-2">
+  <div class="card"><h2>Datos de la práctica</h2>
+    <dl class="kv">
+      <dt>Especialidad</dt><dd>{{ p.especialidad or '—' }}</dd>
+      <dt>Docente tutor</dt><dd>{{ p.tutor or '—' }}</dd>
+      <dt>Referente de la empresa</dt><dd>{{ p.referente or '—' }}{% if p.ref_tel %} · {{ p.ref_tel }}{% endif %}{% if p.ref_email %} · {{ p.ref_email }}{% endif %}</dd>
+      <dt>Período</dt><dd>{{ p.fecha_inicio|fecha or 's/d' }} → {{ p.fecha_fin_estimada|fecha or 's/d' }}{% if p.fecha_fin_real %} (finalizó el {{ p.fecha_fin_real|fecha }}){% endif %}</dd>
+      <dt>Horas requeridas</dt><dd>{{ p.horas_requeridas }} h</dd>
+      <dt>Días y horarios</dt><dd>{{ p.dias_horarios or '—' }}</dd>
+      <dt>Objetivos de aprendizaje</dt><dd>{{ p.objetivos or '—' }}</dd>
+      <dt>Actividades</dt><dd>{{ p.actividades or '—' }}</dd>
+      <dt>Observaciones</dt><dd>{{ p.observaciones or '—' }}</dd>
+    </dl></div>
+  <div>
+    <div class="card"><h2>Avance conjunto</h2>
+      {{ progress((horas_total * 100 / horas_req) if horas_req else 0, (horas_total|num) ~ ' / ' ~ horas_req ~ ' h') }}
+      <p class="small muted" style="margin-top:.6rem">{{ aps|length }} alumno(s) · Vacantes de la empresa: {{ vacantes }} ({{ ocupadas }} ocupadas)</p></div>
+    {% if can('practicas.editar') %}
+    <div class="card"><h2>Cambiar estado de la práctica</h2>
+      <form method="post" action="{{ url_for('practicas.cambiar_estado', id=p.id) }}" class="filter-row">{{ csrf() }}
+        <div class="field grow"><label for="est">Nuevo estado</label><select id="est" name="estado">{% if p.estado not in estados %}<option value="" selected disabled>{{ p.estado }} (definido por la evaluación)</option>{% endif %}{% for e in estados %}<option {% if e == p.estado %}selected{% endif %}>{{ e }}</option>{% endfor %}</select></div>
+        <label class="check"><input type="checkbox" name="forzar" value="1"> Forzar (omitir control documental)</label>
+        <div class="field"><button class="btn btn-primary" type="submit">Aplicar</button></div>
+      </form>
+      <p class="small muted">Aplica a todos los alumnos que aún no tienen resultado. «Habilitada» y «En curso» exigen documentación completa y aprobada.</p>
+    </div>
+    <div class="card"><h2>Reutilizar en otro ciclo</h2>
+      <form method="post" action="{{ url_for('practicas.reutilizar', id=p.id) }}" class="filter-row">{{ csrf() }}
+        <div class="field grow"><label for="cc">Ciclo lectivo destino</label><select id="cc" name="ciclo_id">{% for c in ciclos %}<option value="{{ c.id }}" {% if c.activo %}selected{% endif %}>{{ c.anio }}</option>{% endfor %}</select></div>
+        <div class="field"><button class="btn" type="submit">Copiar práctica</button></div>
+      </form></div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card flush">
+  <h2 style="padding:1rem 1.2rem 0">Alumnos de la práctica</h2>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Alumno</th><th>Curso</th><th>Estado</th><th style="min-width:160px">Horas</th><th>Documentación</th><th>Resultado</th><th></th></tr></thead>
+    <tbody>
+    {% for r in aps %}
+      <tr>
+        <td><a href="{{ url_for('alumnos.ficha', id=r.alumno_id) }}">{{ r.alumno }}</a><div class="muted small">DNI {{ r.dni }}</div></td>
+        <td>{{ r.curso }} {{ r.division or '' }}</td>
+        <td>{{ r.estado|badge }}
+          {% if can('practicas.editar') and r.estado not in ('Aprobada', 'Desaprobada') %}
+          <form method="post" action="{{ url_for('practicas.estado_ap', ap_id=r.ap_id) }}" class="filter-row" style="margin-top:.35rem;gap:.3rem">{{ csrf() }}
+            <select name="estado" style="width:auto;padding:.2rem .3rem;font-size:.8rem">{% for e in estados %}<option {% if e == r.estado %}selected{% endif %}>{{ e }}</option>{% endfor %}</select>
+            <label class="check" style="padding:0;font-size:.75rem"><input type="checkbox" name="forzar" value="1">forzar</label>
+            <button class="btn btn-sm" type="submit">OK</button></form>{% endif %}</td>
+        <td>{{ progress(r.porcentaje, (r.horas_realizadas|num) ~ ' / ' ~ r.horas_requeridas ~ ' h') }}
+          <div class="small muted">Faltas: {{ r.faltas_just + r.faltas_injust }}</div></td>
+        <td>{{ doc_indicator(r.docs_estado, r.docs_faltan) }}{% if r.docs_faltan %}<div class="small muted">Faltan: {{ r.docs_faltan|join(', ') }}</div>{% endif %}</td>
+        <td>{% if r.resultado %}{{ r.resultado|badge }} <span class="small">({{ r.calificacion_final|num(2) }})</span>{% else %}<span class="muted">—</span>{% endif %}</td>
+        <td class="actions">
+          <a class="btn btn-sm" href="{{ url_for('seguimiento.detalle', ap_id=r.ap_id) }}" title="Seguimiento y asistencia">{{ icon('clock', 15) }}</a>
+          <a class="btn btn-sm" href="{{ url_for('evaluaciones.detalle', ap_id=r.ap_id) }}" title="Evaluación">{{ icon('award', 15) }}</a>
+          {% if can('practicas.editar') %}{{ post_button(url_for('practicas.quitar_alumno', ap_id=r.ap_id), '', 'trash', 'btn-sm btn-danger-outline', '¿Quitar a este alumno de la práctica?', title='Quitar') }}{% endif %}
+        </td>
+      </tr>
+    {% else %}<tr><td colspan="7" class="empty">Todavía no hay alumnos asignados.</td></tr>{% endfor %}
+    </tbody></table></div>
+</div>
+
+{% if can('practicas.editar') %}
+<div class="card">
+  <h2>Asignar alumnos <a class="small" href="?todos={{ 0 if todos else 1 }}">{{ 'Sólo cursos que requieren PP' if todos else 'Mostrar alumnos de todos los cursos' }}</a></h2>
+  {% if candidatos %}
+  <form method="post" action="{{ url_for('practicas.agregar_alumnos', id=p.id) }}">{{ csrf() }}
+    <div class="filter-row" style="margin-bottom:.6rem">
+      <div class="field grow"><label for="bf">Filtrar lista</label><input id="bf" type="search" data-filter-list="#cand" placeholder="Apellido, curso, especialidad…"></div>
+      <div class="field"><label for="hs">Horas (opcional)</label><input id="hs" type="number" name="horas" min="1" max="2000" placeholder="{{ p.horas_requeridas }}"></div>
+      <div class="field actions-inline"><button type="button" class="btn btn-sm" data-check-all="#cand" data-state="1">Marcar visibles</button><button type="button" class="btn btn-sm" data-check-all="#cand" data-state="0">Desmarcar</button></div>
+    </div>
+    <div class="checklist" id="cand">{% for a in candidatos %}<label><input type="checkbox" name="alumno_ids" value="{{ a.id }}"> {{ a.alumno }}
+      <span class="muted small">· {{ a.curso }} {{ a.division or '' }} · {{ a.especialidad or 'sin especialidad' }}</span>
+      {% if a.en_ciclo %}<span class="badge badge-amber">ya tiene práctica en este ciclo</span>{% endif %}</label>{% endfor %}</div>
+    <div class="form-actions"><button class="btn btn-primary" type="submit">{{ icon('check', 16) }} Asignar seleccionados</button></div>
+  </form>
+  {% else %}<p class="muted">No hay alumnos disponibles para asignar.</p>{% endif %}
+</div>
+{% endif %}
+
+<div class="grid cols-2">
+  <div class="card"><h2>Documentación de la práctica
+    {% if can('documentos.editar') %}<a class="btn btn-sm" href="{{ url_for('documentos.nuevo', practica_id=p.id, empresa_id=p.empresa_id, next=request.path) }}">{{ icon('upload', 14) }} Subir</a>{% endif %}</h2>
+    {% if docs %}<ul class="plain">{% for d in docs %}<li style="padding:.3rem 0">{{ d.tipo }}{% if d.alumno %} <span class="muted">({{ d.alumno }})</span>{% endif %}:
+      <a href="{{ url_for('documentos.descargar', id=d.id) }}">{{ d.nombre_original }}</a> {{ d.estado|badge }}</li>{% endfor %}</ul>
+    {% else %}<p class="muted">Sin documentos cargados.</p>{% endif %}</div>
+  <div class="card"><h2>Visitas y observaciones recientes
+    {% if can('seguimiento.editar') %}<a class="btn btn-sm" href="{{ url_for('visitas.nuevo', practica_id=p.id, next=request.path) }}">{{ icon('plus', 14) }} Registrar</a>{% endif %}</h2>
+    {% if visitas %}<ul class="plain">{% for v in visitas %}<li style="padding:.4rem 0;border-bottom:1px solid #eef1f5"><strong>{{ v.fecha|fecha }}</strong> · {{ v.tipo }}{% if v.alumno %} · {{ v.alumno }}{% endif %}
+      <div class="small">{{ v.descripcion }}</div></li>{% endfor %}</ul>
+    {% else %}<p class="muted">Sin registros de seguimiento.</p>{% endif %}</div>
+</div>
+{% endblock %}

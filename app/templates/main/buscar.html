@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon %}
+{% set title = 'Búsqueda' %}
+{% block content %}
+<div class="page-head"><div><h1>Resultados de la búsqueda</h1><p class="muted">{% if term|length < 2 %}Escriba al menos 2 caracteres.{% else %}«{{ term }}»: {{ total }} resultado(s){% endif %}</p></div></div>
+{% if res.alumnos %}<div class="card"><h2>Alumnos</h2><ul class="plain">{% for a in res.alumnos %}<li style="padding:.3rem 0"><a href="{{ url_for('alumnos.ficha', id=a.id) }}">{{ a.n }}</a> <span class="muted">· DNI {{ a.dni }} · Legajo {{ a.legajo }} · {{ a.curso }}</span></li>{% endfor %}</ul></div>{% endif %}
+{% if res.empresas %}<div class="card"><h2>Empresas</h2><ul class="plain">{% for e in res.empresas %}<li style="padding:.3rem 0"><a href="{{ url_for('empresas.ficha', id=e.id) }}">{{ e.razon_social }}</a> <span class="muted">{{ e.cuit or '' }} {{ e.localidad or '' }}</span></li>{% endfor %}</ul></div>{% endif %}
+{% if res.practicas %}<div class="card"><h2>Prácticas</h2><ul class="plain">{% for p in res.practicas %}<li style="padding:.3rem 0"><a href="{{ url_for('practicas.ficha', id=p.id) }}">{{ p.numero }}</a> · {{ p.proyecto }} <span class="muted">({{ p.empresa }})</span> {{ p.estado|badge }}</li>{% endfor %}</ul></div>{% endif %}
+{% if res.docentes %}<div class="card"><h2>Docentes</h2><ul class="plain">{% for d in res.docentes %}<li style="padding:.3rem 0"><a href="{{ url_for('docentes.ficha', id=d.id) }}">{{ d.n }}</a> <span class="muted">DNI {{ d.dni }}</span></li>{% endfor %}</ul></div>{% endif %}
+{% if term|length >= 2 and not total %}<div class="card"><p class="muted">No se encontraron coincidencias.</p></div>{% endif %}
+{% endblock %}

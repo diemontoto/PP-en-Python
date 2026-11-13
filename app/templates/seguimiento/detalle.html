@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon, csrf, post_button, progress, doc_indicator %}
+{% set title = 'Seguimiento · ' ~ ap.alumno %}
+{% block content %}
+<div class="page-head">
+  <div><h1>{{ ap.alumno }}</h1>
+    <p class="muted">{{ ap.curso }} {{ ap.division or '' }} · <a href="{{ url_for('practicas.ficha', id=ap.practica_id) }}">{{ ap.numero }}</a> · {{ ap.empresa }} · {{ ap.estado|badge }}</p></div>
+  <div class="head-actions">
+    <a class="btn" href="{{ url_for('evaluaciones.detalle', ap_id=ap.ap_id) }}">{{ icon('award', 16) }} Evaluación</a>
+    <a class="btn" href="{{ url_for('alumnos.ficha', id=ap.alumno_id) }}">{{ icon('users', 16) }} Ficha del alumno</a>
+    <a class="btn" href="{{ url_for('seguimiento.inicio') }}">{{ icon('back', 16) }} Seguimiento</a>
+  </div>
+</div>
+<div class="card">
+  <h2>Cumplimiento de horas</h2>
+  {{ progress(ap.porcentaje, (ap.horas_realizadas|num) ~ ' de ' ~ ap.horas_requeridas ~ ' h') }}
+  <div class="kpis" style="margin:1rem 0 0">
+    <div class="kpi green"><div class="n">{{ ap.horas_realizadas|num }}</div><div class="l">Horas realizadas</div></div>
+    <div class="kpi amber"><div class="n">{{ ap.horas_faltan|num }}</div><div class="l">Horas pendientes</div></div>
+    <div class="kpi"><div class="n">{{ ap.dias_presente }}</div><div class="l">Días presente</div></div>
+    <div class="kpi red"><div class="n">{{ ap.faltas_injust }}</div><div class="l">Faltas injustificadas</div></div>
+    <div class="kpi teal"><div class="n">{{ ap.faltas_just }}</div><div class="l">Faltas justificadas</div></div>
+    <div class="kpi violet"><div class="n">{{ (pct_asist|num ~ ' %') if pct_asist is not none else '—' }}</div><div class="l">Asistencia</div></div>
+  </div>
+  <p style="margin-top:.8rem">Documentación: {{ doc_indicator(ap.docs_estado, ap.docs_faltan) }}</p>
+</div>
+
+{% if can('seguimiento.editar') and not cerrado %}
+<div class="card"><h2>Registrar asistencia</h2>
+  <form method="post" action="{{ url_for('asistencias.nuevo') }}">{{ csrf() }}
+    <input type="hidden" name="alumno_practica_id" value="{{ ap.ap_id }}"><input type="hidden" name="next" value="{{ request.path }}">
+    <div class="form-grid three">
+      <div class="field"><label>Fecha</label><input type="date" name="fecha" value="{{ hoy }}" max="{{ hoy }}" required></div>
+      <div class="field"><label>Tipo</label><select name="tipo">{% for t in tipos %}<option>{{ t }}</option>{% endfor %}</select></div>
+      <div class="field"><label>Observaciones</label><input type="text" name="observaciones" maxlength="300"></div>
+      <div class="field"><label>Hora de entrada</label><input type="time" name="hora_entrada"></div>
+      <div class="field"><label>Hora de salida</label><input type="time" name="hora_salida"></div>
+      <div class="field actions-inline" style="align-self:end"><button class="btn btn-primary" type="submit">{{ icon('plus', 15) }} Registrar</button></div>
+    </div>
+    <p class="small muted">Las horas se calculan automáticamente a partir de la entrada y la salida.</p>
+  </form></div>
+{% endif %}
+
+<div class="card flush"><h2 style="padding:1rem 1.2rem 0">Registro de asistencia</h2>
+  <div class="table-wrap"><table class="table compact"><thead><tr><th>Fecha</th><th>Tipo</th><th>Entrada</th><th>Salida</th><th>Horas</th><th>Observaciones</th><th></th></tr></thead><tbody>
+  {% for a in asist %}<tr><td>{{ a.fecha|fecha }}</td><td>{{ a.tipo|badge }}</td><td>{{ a.hora_entrada or '' }}</td><td>{{ a.hora_salida or '' }}</td><td>{{ a.horas|num(2) }}</td><td>{{ a.observaciones or '' }}</td>
+    <td class="actions">{% if can('seguimiento.editar') and not cerrado %}<a class="btn btn-sm" href="{{ url_for('asistencias.editar', id=a.id, next=request.path) }}">{{ icon('edit', 14) }}</a>{% endif %}
+      {% if can('seguimiento.eliminar') %}{{ post_button(url_for('asistencias.baja', id=a.id), '', 'trash', 'btn-sm btn-danger-outline', '¿Eliminar este registro de asistencia?', next=request.path) }}{% endif %}</td></tr>
+  {% else %}<tr><td colspan="7" class="empty">Sin asistencias registradas.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+
+<div class="card"><h2>Visitas y observaciones de seguimiento
+  {% if can('seguimiento.editar') %}<a class="btn btn-sm" href="{{ url_for('visitas.nuevo', practica_id=ap.practica_id, alumno_practica_id=ap.ap_id, next=request.path) }}">{{ icon('plus', 14) }} Registrar</a>{% endif %}</h2>
+  {% if segs %}<ul class="plain">{% for s in segs %}<li style="padding:.5rem 0;border-bottom:1px solid #eef1f5"><strong>{{ s.fecha|fecha }}</strong> · {{ s.tipo }}{% if s.docente %} · {{ s.docente }}{% endif %}
+    {% if can('seguimiento.editar') %}<a class="small" href="{{ url_for('visitas.editar', id=s.id, next=request.path) }}">editar</a>{% endif %}
+    <div>{{ s.descripcion }}</div></li>{% endfor %}</ul>{% else %}<p class="muted">Sin registros.</p>{% endif %}</div>
+{% endblock %}

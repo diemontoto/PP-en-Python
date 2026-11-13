@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon, pager %}
+{% set title = 'Historial' %}
+{% block content %}
+<div class="page-head"><div><h1>Historial de operaciones</h1><p class="muted">Registro de altas, modificaciones, bajas, accesos, exportaciones y copias de seguridad.</p></div>
+  <div class="head-actions"><a class="btn" href="{{ url_for('admin.configuracion') }}">{{ icon('back', 15) }} Configuración</a></div></div>
+<form class="filters card" method="get"><div class="filter-row">
+  <div class="field"><label>Módulo / tabla</label><select name="tabla"><option value="">Todos</option>{% for t in tablas %}<option {% if args.get('tabla') == t %}selected{% endif %}>{{ t }}</option>{% endfor %}</select></div>
+  <div class="field"><label>Acción</label><select name="accion"><option value="">Todas</option>{% for t in acciones %}<option {% if args.get('accion') == t %}selected{% endif %}>{{ t }}</option>{% endfor %}</select></div>
+  <div class="field"><label>Usuario</label><select name="usuario"><option value="">Todos</option>{% for u in usuarios %}<option value="{{ u.id }}" {% if args.get('usuario') == u.id|string %}selected{% endif %}>{{ u.nombre }}</option>{% endfor %}</select></div>
+  <div class="field"><label>Desde</label><input type="date" name="desde" value="{{ args.get('desde', '') }}"></div>
+  <div class="field"><label>Hasta</label><input type="date" name="hasta" value="{{ args.get('hasta', '') }}"></div>
+  <div class="field"><label>N° de registro</label><input type="number" name="registro" value="{{ args.get('registro', '') }}"></div>
+  <div class="field actions-inline"><button class="btn btn-primary" type="submit">{{ icon('search', 15) }} Filtrar</button><a class="btn" href="{{ url_for('admin.historial') }}">Limpiar</a></div>
+</div></form>
+<div class="card flush"><div class="table-wrap"><table class="table compact"><thead><tr><th>Fecha</th><th>Usuario</th><th>Tabla</th><th>Registro</th><th>Acción</th><th>Detalle</th><th>IP</th></tr></thead><tbody>
+{% for h in rows %}<tr><td style="white-space:nowrap">{{ h.fecha|fechahora }}</td><td>{{ h.usuario_nombre or '—' }}</td><td>{{ h.tabla }}</td><td>{{ h.registro_id or '' }}</td><td>{{ h.accion }}</td><td class="diff">{{ (h.detalle or '')[:260] }}</td><td>{{ h.ip or '' }}</td></tr>
+{% else %}<tr><td colspan="7" class="empty">Sin registros.</td></tr>{% endfor %}
+</tbody></table></div><div class="table-foot"><span>{{ total }} operación(es)</span>{{ pager(page, pages) }}</div></div>
+{% endblock %}

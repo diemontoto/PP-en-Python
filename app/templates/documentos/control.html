@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon, doc_indicator %}
+{% set title = 'Control documental' %}
+{% block content %}
+<div class="page-head"><div><h1>Control documental</h1><p class="muted">Documentos obligatorios por alumno: <span class="badge badge-green">✓ aprobado</span> <span class="badge badge-amber">… pendiente de revisión</span> <span class="badge badge-red">✗ falta</span> <span class="badge badge-orange">vencido</span></p></div>
+  <div class="head-actions"><a class="btn" href="{{ url_for('documentos.lista') }}">{{ icon('back', 15) }} Repositorio</a></div></div>
+<form class="filters card" method="get"><div class="filter-row">
+  <div class="field"><label>Año lectivo</label><select name="ciclo_id"><option value="">Todos</option>{% for c in ciclos %}<option value="{{ c.id }}" {% if f.ciclo_id|string == c.id|string %}selected{% endif %}>{{ c.anio }}</option>{% endfor %}</select></div>
+  <div class="field"><label>Especialidad</label><select name="especialidad_id"><option value="">Todas</option>{% for e in especialidades %}<option value="{{ e.id }}" {% if f.especialidad_id|string == e.id|string %}selected{% endif %}>{{ e.nombre }}</option>{% endfor %}</select></div>
+  <div class="field"><label>Curso</label><select name="curso_id"><option value="">Todos</option>{% for e in cursos %}<option value="{{ e.id }}" {% if f.curso_id|string == e.id|string %}selected{% endif %}>{{ e.nombre }}</option>{% endfor %}</select></div>
+  <div class="field"><label>Empresa</label><select name="empresa_id"><option value="">Todas</option>{% for e in empresas %}<option value="{{ e.id }}" {% if f.empresa_id|string == e.id|string %}selected{% endif %}>{{ e.nombre }}</option>{% endfor %}</select></div>
+  <div class="field"><label>Documentación</label><select name="estado"><option value="">Todas</option>{% for e in ['Completa', 'Pendiente de revisión', 'Incompleta'] %}<option {% if args.get('estado') == e %}selected{% endif %}>{{ e }}</option>{% endfor %}</select></div>
+  <div class="field actions-inline"><button class="btn btn-primary" type="submit">{{ icon('search', 15) }} Filtrar</button><a class="btn" href="{{ url_for('documentos.control') }}">Limpiar</a></div>
+</div></form>
+<div class="card flush"><div class="table-wrap"><table class="table compact"><thead><tr><th>Alumno</th><th>Práctica</th>{% for t in tipos %}<th title="{{ t.nombre }}">{{ t.nombre }}</th>{% endfor %}<th>Estado</th></tr></thead><tbody>
+{% for r in rows %}<tr><td><a href="{{ url_for('alumnos.ficha', id=r.alumno_id) }}">{{ r.alumno }}</a></td><td><a href="{{ url_for('practicas.ficha', id=r.practica_id) }}">{{ r.numero }}</a><div class="small muted">{{ r.empresa }}</div></td>
+  {% for t in tipos %}{% set s = det[r.ap_id][t.id] %}<td class="center">{% if s == 'ok' %}<span class="badge badge-green">✓</span>{% elif s == 'pend' %}<span class="badge badge-amber">…</span>{% elif s == 'venc' %}<span class="badge badge-orange">venc.</span>{% else %}<span class="badge badge-red">✗</span>{% endif %}</td>{% endfor %}
+  <td>{{ doc_indicator(r.docs_estado, r.docs_faltan) }}</td></tr>
+{% else %}<tr><td colspan="{{ tipos|length + 3 }}" class="empty">Sin asignaciones para controlar.</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon, csrf, field %}
+{% set title = (e.singular ~ ' · ' ~ ('Editar' if row else 'Nuevo')) %}
+{% block content %}
+<div class="page-head">
+  <h1>{{ 'Editar' if row else 'Nuevo' }} {{ e.singular|lower }}</h1>
+  <div class="head-actions"><a class="btn" href="{{ next or (url_for(e.slug ~ '.lista') if e.listable else url_for('main.inicio')) }}">{{ icon('back', 15) }} Volver</a></div>
+</div>
+{% if form_help is defined and form_help %}<div class="flash flash-info">{{ form_help }}</div>{% endif %}
+<form method="post" class="card" novalidate>
+  {{ csrf() }}
+  {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+  <div class="form-grid">
+    {% for f in fields %}{{ field(f, values, errors) }}{% endfor %}
+  </div>
+  {% if e.form_extra and form_template is defined %}{% include form_template %}{% endif %}
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">{{ icon('check', 16) }} Guardar</button>
+    <a class="btn" href="{{ next or (url_for(e.slug ~ '.lista') if e.listable else url_for('main.inicio')) }}">Cancelar</a>
+  </div>
+</form>
+{% endblock %}

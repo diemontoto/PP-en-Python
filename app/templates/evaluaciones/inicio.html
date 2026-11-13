@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon, progress %}
+{% set title = 'Evaluaciones' %}
+{% block content %}
+<div class="page-head"><div><h1>Evaluaciones</h1><p class="muted">Evaluación del tutor, del referente y resultado final de cada práctica.</p></div>
+  <div class="head-actions"><a class="btn" href="{{ url_for('informes.ver', clave='evaluaciones', **args.to_dict()) }}">{{ icon('chart', 16) }} Informe de evaluaciones</a></div></div>
+<form class="filters card" method="get"><div class="filter-row">
+  <div class="field"><label>Año lectivo</label><select name="ciclo_id"><option value="">Todos</option>{% for c in ciclos %}<option value="{{ c.id }}" {% if f.ciclo_id|string == c.id|string %}selected{% endif %}>{{ c.anio }}</option>{% endfor %}</select></div>
+  <div class="field"><label>Especialidad</label><select name="especialidad_id"><option value="">Todas</option>{% for e in especialidades %}<option value="{{ e.id }}" {% if f.especialidad_id|string == e.id|string %}selected{% endif %}>{{ e.nombre }}</option>{% endfor %}</select></div>
+  <div class="field"><label>Curso</label><select name="curso_id"><option value="">Todos</option>{% for e in cursos %}<option value="{{ e.id }}" {% if f.curso_id|string == e.id|string %}selected{% endif %}>{{ e.nombre }}</option>{% endfor %}</select></div>
+  <div class="field"><label>Estado</label><select name="estado"><option value="">Todos</option>{% for e in estados %}<option {% if f.estado == e %}selected{% endif %}>{{ e }}</option>{% endfor %}</select></div>
+  <div class="field"><label>Resultado</label><select name="resultado"><option value="">Todos</option><option value="pendiente" {% if args.get('resultado') == 'pendiente' %}selected{% endif %}>Sin resultado</option><option {% if args.get('resultado') == 'Aprobado' %}selected{% endif %}>Aprobado</option><option {% if args.get('resultado') == 'Desaprobado' %}selected{% endif %}>Desaprobado</option></select></div>
+  <div class="field actions-inline"><button class="btn btn-primary" type="submit">{{ icon('search', 15) }} Filtrar</button><a class="btn" href="{{ url_for('evaluaciones.inicio') }}">Limpiar</a></div>
+</div></form>
+<div class="card flush"><div class="table-wrap"><table class="table"><thead><tr><th>Alumno</th><th>Práctica</th><th>Estado</th><th style="min-width:140px">Horas</th><th>Tutor</th><th>Referente</th><th>Nota final</th><th>Resultado</th><th></th></tr></thead><tbody>
+{% for r in rows %}<tr><td><a href="{{ url_for('alumnos.ficha', id=r.alumno_id) }}">{{ r.alumno }}</a><div class="small muted">{{ r.curso }} {{ r.division or '' }}</div></td>
+  <td><a href="{{ url_for('practicas.ficha', id=r.practica_id) }}">{{ r.numero }}</a><div class="small muted">{{ r.empresa }}</div></td><td>{{ r.estado|badge }}</td>
+  <td>{{ progress(r.porcentaje, (r.horas_realizadas|num) ~ ' / ' ~ r.horas_requeridas ~ ' h') }}</td>
+  <td>{% if r.ev_tutor is not none %}{{ r.ev_tutor|num(2) }}{% else %}<span class="muted">—</span>{% endif %}</td>
+  <td>{% if r.ev_ref is not none %}{{ r.ev_ref|num(2) }}{% else %}<span class="muted">—</span>{% endif %}</td>
+  <td>{% if r.calificacion_final is not none %}<strong>{{ r.calificacion_final|num(2) }}</strong>{% else %}<span class="muted">—</span>{% endif %}</td>
+  <td>{{ r.resultado|badge if r.resultado else '' }}</td>
+  <td class="actions"><a class="btn btn-sm" href="{{ url_for('evaluaciones.detalle', ap_id=r.ap_id) }}">{{ icon('award', 15) }} Evaluar</a></td></tr>
+{% else %}<tr><td colspan="9" class="empty">Sin asignaciones.</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}
