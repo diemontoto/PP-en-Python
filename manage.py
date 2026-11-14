@@ -32,6 +32,32 @@ def cmd_create_admin(app, a):
         commit()
 
 
+def cmd_bootstrap(app, a):
+    """Arranque de contenedor: crea la base y, si no hay usuarios, el administrador inicial (PP_ADMIN_USER / PP_ADMIN_PASSWORD)."""
+    import os
+    import secrets
+    with app.app_context():
+        get_db()
+        if q1("SELECT 1 FROM usuarios WHERE eliminado_en IS NULL"):
+            return
+        user = os.environ.get("PP_ADMIN_USER", "admin")
+        pw = os.environ.get("PP_ADMIN_PASSWORD")
+        generada = not pw
+        if generada:
+            pw = secrets.token_urlsafe(9) + "a1"
+        msg = validate_password(pw, user)
+        if msg:
+            sys.exit("PP_ADMIN_PASSWORD inválida: " + msg)
+        ex("INSERT INTO usuarios(username, nombre, password_hash, rol_id, activo, debe_cambiar_clave) VALUES (?,?,?,?,1,1)",
+           (user, "Administrador", hash_password(pw), q1("SELECT id FROM roles WHERE codigo = 'admin'")["id"]), commit=False)
+        commit()
+        print(f"[bootstrap] Administrador inicial creado: usuario «{user}»" + (f", contraseña temporal: {pw}" if generada else "") +
+              " (se pedirá cambiarla al ingresar).", flush=True)
+        if os.environ.get("PP_DEMO") == "1" and not q1("SELECT 1 FROM alumnos"):
+            from app import seed
+            seed.run()
+
+
 def cmd_seed(app, a):
     from app import seed
     with app.app_context():
@@ -52,6 +78,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     s = p.add_subparsers(dest="cmd", required=True)
     s.add_parser("init-db").set_defaults(f=cmd_init_db)
+    s.add_parser("bootstrap").set_defaults(f=cmd_bootstrap)
     c = s.add_parser("create-admin")
     c.add_argument("username")
     c.add_argument("--nombre", default="Administrador")

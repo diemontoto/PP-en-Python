@@ -1,0 +1,13 @@
+.git
+.gitignore
+instance/
+data/
+tests/
+docs/
+api/
+vercel.json
+.vercelignore
+__pycache__/
+*.pyc
+*.zip
+.env

@@ -63,12 +63,20 @@ Certificado gratuito: `sudo certbot --nginx -d practicas.miescuela.edu.ar`.
 ```
 Copie además `/var/lib/practicas-pp/backups/` a otro equipo o a la nube (rsync, rclone) con una frecuencia al menos semanal.
 
-## 5. Docker (alternativa)
+## 5. Docker (recomendado para una instalación simple)
+Requiere Docker y Docker Compose. Los datos viven en el volumen `pp_data` (base de datos, documentos, copias y clave secreta): sobreviven a reinicios y actualizaciones.
 ```bash
-docker build -t practicas-pp .
-docker run --rm -v pp_data:/data practicas-pp python manage.py create-admin admin
-docker run -d --name pp -p 8000:8000 -v pp_data:/data -e PP_HTTPS=1 practicas-pp
+cp .env.example .env        # editar: PP_ADMIN_PASSWORD, PP_SECRET_KEY
+docker compose up -d --build
+docker compose logs app     # si no definió PP_ADMIN_PASSWORD, aquí aparece la contraseña temporal
 ```
+Abra `http://IP-DEL-SERVIDOR:8000`. Ingrese con el usuario `PP_ADMIN_USER` (por defecto `admin`); se le pedirá cambiar la contraseña.
+
+- **HTTPS:** ponga delante nginx o Caddy con certificado y cambie `PP_HTTPS=1` en `.env` (con `http://` plano debe quedar en 0, o no podrá iniciar sesión).
+- **Copias:** el servicio `backup` genera un ZIP diario en el volumen (`/data/backups`, se conservan 30). Cópielos fuera del servidor: `docker cp practicas-pp:/data/backups ./respaldos`.
+- **Actualizar:** `git pull && docker compose up -d --build` (el volumen no se toca).
+- **Detener sin perder datos:** `docker compose down`. **Nunca** use `down -v` salvo que quiera borrar todo.
+- **Datos de demostración:** `PP_DEMO=1` en `.env` antes del primer arranque (no para producción).
 
 ## 6. Actualizaciones
 Haga un respaldo, reemplace el código (no toque `instance/`), `pip install -r requirements.txt`, reinicie el servicio y ejecute las pruebas.

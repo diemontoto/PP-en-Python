@@ -1,0 +1,32 @@
+# Uso:  cp .env.example .env   (editar)   →   docker compose up -d --build
+services:
+  app:
+    build: .
+    image: practicas-pp:latest
+    container_name: practicas-pp
+    restart: unless-stopped
+    environment:
+      PP_ADMIN_USER: ${PP_ADMIN_USER:-admin}
+      PP_ADMIN_PASSWORD: ${PP_ADMIN_PASSWORD:-}
+      PP_SECRET_KEY: ${PP_SECRET_KEY:-}
+      PP_HTTPS: ${PP_HTTPS:-0}
+      PP_DEMO: ${PP_DEMO:-0}
+    ports:
+      - "${PP_PORT:-8000}:8000"
+    volumes:
+      - pp_data:/data          # base de datos, documentos adjuntos, copias y clave secreta
+
+  # Copia de seguridad diaria dentro del volumen (además, copie /data/backups fuera del servidor)
+  backup:
+    image: practicas-pp:latest
+    container_name: practicas-pp-backup
+    restart: unless-stopped
+    depends_on: [app]
+    entrypoint: ["/bin/sh", "-c", "while true; do sleep 86400; python manage.py backup --keep 30; done"]
+    environment:
+      PP_SECRET_KEY: ${PP_SECRET_KEY:-}
+    volumes:
+      - pp_data:/data
+
+volumes:
+  pp_data:
