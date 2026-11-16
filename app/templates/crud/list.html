@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon, post_button, pager %}
+{% set title = e.plural %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ e.plural }}</h1>
+    {% if e.subtitle %}<p class="muted">{{ e.subtitle }}</p>{% endif %}
+  </div>
+  <div class="head-actions">
+    {% if e.export %}<a class="btn" href="{{ export_url }}">{{ icon('download', 16) }} Excel</a>{% endif %}
+    {% if can(e.module ~ '.editar') and not baja %}<a class="btn btn-primary" href="{{ url_for(e.slug ~ '.nuevo') }}">{{ icon('plus', 16) }} {{ e.nuevo_label }}</a>{% endif %}
+  </div>
+</div>
+
+{% if list_template is defined %}{% include list_template %}{% endif %}
+
+<form class="filters card" method="get">
+  <div class="filter-row">
+    {% if e.search %}
+    <div class="field grow"><label for="q">Buscar</label><input id="q" type="search" name="q" value="{{ term }}" placeholder="Escriba y presione Enter"></div>
+    {% endif %}
+    {% for f in filters %}
+    <div class="field"><label for="flt_{{ f.name }}">{{ f.label }}</label>
+      <select id="flt_{{ f.name }}" name="{{ f.name }}">
+        <option value="">Todos</option>
+        {% for v, l in f.options %}<option value="{{ v }}" {% if f.value|string == v|string %}selected{% endif %}>{{ l }}</option>{% endfor %}
+      </select></div>
+    {% endfor %}
+    {% if can(e.module ~ '.eliminar') and e.soft %}
+    <div class="field"><label class="check"><input type="checkbox" name="baja" value="1" {% if baja %}checked{% endif %}> Ver dados de baja</label></div>
+    {% endif %}
+    <div class="field actions-inline"><button class="btn btn-primary" type="submit">{{ icon('search', 15) }} Filtrar</button>
+      <a class="btn" href="{{ url_for(e.slug ~ '.lista') }}">Limpiar</a></div>
+  </div>
+</form>
+
+<div class="card flush">
+  <div class="table-wrap">
+  <table class="table">
+    <thead><tr>
+      {% for c in e.columns %}<th>{{ c.label }}</th>{% endfor %}
+      <th class="actions-col"></th>
+    </tr></thead>
+    <tbody>
+    {% for r in rows %}
+      <tr {% if r['eliminado_en'] is defined and r['eliminado_en'] %}class="deleted"{% endif %}>
+        {% for c in e.columns %}
+          <td data-label="{{ c.label }}">
+            {% if c.link and e.detail %}<a href="{{ url_for(e.slug ~ '.ficha', id=r['id']) }}"><strong>{{ r[c.key]|cell(c.kind) }}</strong></a>
+            {% else %}{{ r[c.key]|cell(c.kind) }}{% endif %}
+          </td>
+        {% endfor %}
+        <td class="actions">
+          {% if e.detail %}<a class="btn btn-sm" href="{{ url_for(e.slug ~ '.ficha', id=r['id']) }}" title="Ver ficha">{{ icon('eye', 15) }}</a>{% endif %}
+          {% if baja %}
+            {{ post_button(url_for(e.slug ~ '.restaurar', id=r['id']), 'Restaurar', 'restore') }}
+          {% else %}
+            {% if can(e.module ~ '.editar') %}<a class="btn btn-sm" href="{{ url_for(e.slug ~ '.editar', id=r['id']) }}" title="Editar">{{ icon('edit', 15) }}</a>{% endif %}
+            {% if can(e.module ~ '.eliminar') %}{{ post_button(url_for(e.slug ~ '.baja', id=r['id']), '', 'trash', 'btn-sm btn-danger-outline', '¿Dar de baja este registro? Podrá restaurarse luego.', title='Dar de baja') }}{% endif %}
+          {% endif %}
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="{{ e.columns|length + 1 }}" class="empty">No se encontraron registros.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <div class="table-foot"><span>{{ total }} registro(s)</span>{{ pager(page, pages) }}</div>
+</div>
+{% endblock %}

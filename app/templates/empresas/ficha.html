@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon, tabla_ap, post_button %}
+{% set title = e.razon_social %}
+{% block content %}
+<div class="page-head">
+  <div><h1>{{ e.razon_social }}</h1>
+    <p class="muted">{% if e.nombre_fantasia %}{{ e.nombre_fantasia }} · {% endif %}{% if e.cuit %}CUIT {{ e.cuit }} · {% endif %}{{ 'Activa' if e.activo else 'Inactiva' }}</p></div>
+  <div class="head-actions">
+    {% if can('empresas.editar') %}<a class="btn" href="{{ url_for('empresas.editar', id=e.id) }}">{{ icon('edit', 16) }} Editar</a>{% endif %}
+    <a class="btn" href="{{ url_for('empresas.lista') }}">{{ icon('back', 16) }} Listado</a>
+  </div>
+</div>
+<div class="grid cols-2">
+  <div class="card"><h2>Datos de la empresa</h2>
+    <dl class="kv">
+      <dt>Dirección</dt><dd>{{ e.direccion or '—' }}{% if e.localidad %}, {{ e.localidad }}{% endif %}</dd>
+      <dt>Teléfono</dt><dd>{{ e.telefono or '—' }}</dd><dt>Correo electrónico</dt><dd>{{ e.email or '—' }}</dd>
+      <dt>Actividad principal</dt><dd>{{ e.actividad or '—' }}</dd>
+      <dt>Observaciones</dt><dd>{{ e.observaciones or '—' }}</dd>
+    </dl></div>
+  <div class="card"><h2>Vacantes</h2>
+    <div class="kpis" style="margin:0">
+      <div class="kpi"><div class="n">{{ e.vacantes }}</div><div class="l">Vacantes totales</div></div>
+      <div class="kpi amber"><div class="n">{{ e.ocupadas }}</div><div class="l">Ocupadas</div></div>
+      <div class="kpi green"><div class="n">{{ e.disponibles }}</div><div class="l">Disponibles</div></div>
+    </div></div>
+</div>
+<div class="card">
+  <h2>Referentes {% if can('empresas.editar') %}<a class="btn btn-sm" href="{{ url_for('referentes.nuevo', empresa_id=e.id, next=url_for('empresas.ficha', id=e.id)) }}">{{ icon('plus', 14) }} Agregar referente</a>{% endif %}</h2>
+  {% if refs %}<div class="table-wrap"><table class="table compact"><thead><tr><th>Nombre</th><th>Cargo</th><th>Teléfono</th><th>Correo</th><th>Estado</th><th></th></tr></thead><tbody>
+    {% for r in refs %}<tr><td>{{ r.nombre }}</td><td>{{ r.cargo or '' }}</td><td>{{ r.telefono or '' }}</td><td>{{ r.email or '' }}</td><td>{{ r.activo|cell('bool') }}</td>
+      <td class="actions">{% if can('empresas.editar') %}<a class="btn btn-sm" href="{{ url_for('referentes.editar', id=r.id, next=url_for('empresas.ficha', id=e.id)) }}">{{ icon('edit', 14) }}</a>{% endif %}
+      {% if can('empresas.eliminar') %}{{ post_button(url_for('referentes.baja', id=r.id), '', 'trash', 'btn-sm btn-danger-outline', '¿Dar de baja este referente?', next=url_for('empresas.ficha', id=e.id)) }}{% endif %}</td></tr>{% endfor %}
+  </tbody></table></div>{% else %}<p class="muted">Sin referentes cargados.</p>{% endif %}
+</div>
+<div class="card flush"><h2 style="padding:1rem 1.2rem 0">Historial de alumnos que realizaron prácticas</h2>{{ tabla_ap(historial, mostrar_empresa=False) }}</div>
+<div class="grid cols-2">
+  <div class="card"><h2>Prácticas</h2>
+    {% if practicas %}<ul class="plain">{% for p in practicas %}<li style="padding:.3rem 0"><a href="{{ url_for('practicas.ficha', id=p.id) }}">{{ p.numero }}</a> · {{ p.proyecto }} <span class="muted">({{ p.anio }}, {{ p.n }} alumno/s)</span> {{ p.estado|badge }}</li>{% endfor %}</ul>
+    {% else %}<p class="muted">Sin prácticas registradas.</p>{% endif %}</div>
+  <div class="card"><h2>Convenios y documentación de la empresa
+    {% if can('documentos.editar') %}<a class="btn btn-sm" href="{{ url_for('documentos.nuevo', empresa_id=e.id, next=request.path) }}">{{ icon('upload', 14) }} Subir</a>{% endif %}</h2>
+    {% if docs %}<ul class="plain">{% for d in docs %}<li style="padding:.3rem 0">{{ d.tipo }}: <a href="{{ url_for('documentos.descargar', id=d.id) }}">{{ d.nombre_original }}</a> {{ d.estado|badge }}</li>{% endfor %}</ul>
+    {% else %}<p class="muted">Sin documentos.</p>{% endif %}</div>
+</div>
+{% endblock %}

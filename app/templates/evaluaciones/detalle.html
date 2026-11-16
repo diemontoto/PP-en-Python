@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon, csrf, post_button, progress %}
+{% set title = 'Evaluación · ' ~ ap.alumno %}
+{% macro bloque(nombre, clave, ev) %}
+<div class="card"><h2>{{ nombre }}
+  {% if ev %}{% if can('evaluaciones.editar') and (g.user.rol != 'tutor' or clave == 'Tutor') %}<a class="btn btn-sm" href="{{ url_for('evals.editar', id=ev.id, next=request.path) }}">{{ icon('edit', 14) }} Editar</a>{% endif %}
+  {% elif can('evaluaciones.editar') and (g.user.rol != 'tutor' or clave == 'Tutor') %}<a class="btn btn-sm btn-primary" href="{{ url_for('evals.nuevo', alumno_practica_id=ap.ap_id, evaluador=clave, next=request.path) }}">{{ icon('plus', 14) }} Cargar</a>{% endif %}</h2>
+  {% if ev %}
+  <p class="small muted">{{ ev.evaluador_nombre or '' }} · {{ ev.fecha|fecha }}</p>
+  <table class="table compact"><tbody>{% for k, lbl in criterios %}<tr><td>{{ lbl }}</td><td style="width:60px"><strong>{{ ev[k] }}</strong> / 10</td></tr>{% endfor %}
+    <tr><td><strong>Promedio</strong></td><td><strong>{{ ev.promedio|num(2) }}</strong></td></tr></tbody></table>
+  {% if ev.observaciones %}<p><strong>Observaciones:</strong> {{ ev.observaciones }}</p>{% endif %}
+  {% else %}<p class="muted">Todavía no se cargó esta evaluación.</p>{% endif %}
+</div>
+{% endmacro %}
+{% block content %}
+<div class="page-head"><div><h1>Evaluación de {{ ap.alumno }}</h1>
+  <p class="muted">{{ ap.curso }} {{ ap.division or '' }} · <a href="{{ url_for('practicas.ficha', id=ap.practica_id) }}">{{ ap.numero }}</a> · {{ ap.empresa }} · {{ ap.estado|badge }}</p></div>
+  <div class="head-actions"><a class="btn" href="{{ url_for('evaluaciones.informe_pdf', ap_id=ap.ap_id) }}" target="_blank">{{ icon('file', 16) }} Informe PDF</a>
+    <a class="btn" href="{{ url_for('evaluaciones.inicio') }}">{{ icon('back', 16) }} Evaluaciones</a></div></div>
+<div class="card"><h2>Cumplimiento de horas</h2>{{ progress(ap.porcentaje, (ap.horas_realizadas|num) ~ ' / ' ~ ap.horas_requeridas ~ ' h') }}
+  <p class="small muted" style="margin-top:.5rem">Faltas injustificadas: {{ ap.faltas_injust }} · justificadas: {{ ap.faltas_just }}</p></div>
+<div class="grid cols-2">{{ bloque('Evaluación del docente tutor', 'Tutor', d.evals.get('Tutor')) }}{{ bloque('Evaluación del referente de la empresa', 'Referente', d.evals.get('Referente')) }}</div>
+
+<div class="card"><h2>Resultado final {% if ap.resultado %}{{ ap.resultado|badge }}{% endif %}</h2>
+  {% if ap.resultado %}
+    <dl class="kv"><dt>Calificación final</dt><dd><strong>{{ d.final.calificacion_final|num(2) }}</strong></dd><dt>Fecha</dt><dd>{{ d.final.fecha_resultado|fecha }}</dd><dt>Observaciones</dt><dd>{{ d.final.observaciones_finales or '—' }}</dd></dl>
+    {% if can('evaluaciones.editar') %}<div style="margin-top:.8rem">{{ post_button(url_for('evaluaciones.reabrir', ap_id=ap.ap_id), 'Anular resultado y reabrir', 'restore', 'btn', '¿Anular el resultado final? La práctica volverá a «Finalizada».') }}</div>{% endif %}
+  {% elif can('evaluaciones.editar') %}
+  <form method="post" action="{{ url_for('evaluaciones.final', ap_id=ap.ap_id) }}">{{ csrf() }}
+    <div class="form-grid three">
+      <div class="field"><label>Calificación final (1 a 10)</label><input type="number" name="calificacion_final" step="0.01" min="1" max="10" required value="{{ d.sugerida if d.sugerida is not none else '' }}">
+        <small class="help">{% if d.sugerida is not none %}Sugerida: promedio de las evaluaciones cargadas ({{ d.sugerida|num(2) }}). {% endif %}Nota mínima de aprobación: {{ nota_min|num }}.</small></div>
+      <div class="field"><label>Resultado</label><select name="resultado" required><option value="">— Seleccione —</option><option>Aprobado</option><option>Desaprobado</option></select></div>
+      <label class="check"><input type="checkbox" name="forzar" value="1"> Aprobar con horas incompletas</label>
+      <div class="field span-2"><label>Observaciones finales</label><textarea name="observaciones_finales" rows="3" maxlength="2000"></textarea></div>
+    </div>
+    <div class="form-actions"><button class="btn btn-primary" type="submit">{{ icon('check', 16) }} Registrar resultado</button></div>
+  </form>
+  {% else %}<p class="muted">Resultado pendiente.</p>{% endif %}
+</div>
+{% endblock %}

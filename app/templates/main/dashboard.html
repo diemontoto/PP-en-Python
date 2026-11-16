@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon %}
+{% set title = 'Inicio' %}
+{% block content %}
+<div class="page-head"><div><h1>Panel de control</h1><p class="muted">Bienvenido/a, {{ g.user.nombre }}. {% if g.user.rol == 'tutor' %}Mostrando sus alumnos y prácticas asignadas.{% endif %}</p></div></div>
+{% if k %}
+<form class="filters card" method="get"><div class="filter-row">
+  <div class="field"><label for="d1">Año lectivo</label><select id="d1" name="ciclo_id" data-autosubmit><option value="">Todos</option>{% for c in ciclos %}<option value="{{ c.id }}" {% if f.ciclo_id|string == c.id|string %}selected{% endif %}>{{ c.anio }}</option>{% endfor %}</select></div>
+  <div class="field"><label for="d2">Especialidad</label><select id="d2" name="especialidad_id" data-autosubmit><option value="">Todas</option>{% for e in especialidades %}<option value="{{ e.id }}" {% if f.especialidad_id|string == e.id|string %}selected{% endif %}>{{ e.nombre }}</option>{% endfor %}</select></div>
+  <div class="field"><label for="d3">Curso</label><select id="d3" name="curso_id" data-autosubmit><option value="">Todos</option>{% for e in cursos %}<option value="{{ e.id }}" {% if f.curso_id|string == e.id|string %}selected{% endif %}>{{ e.nombre }}</option>{% endfor %}</select></div>
+  <div class="field"><label for="d4">División</label><select id="d4" name="division_id" data-autosubmit><option value="">Todas</option>{% for e in divisiones %}<option value="{{ e.id }}" {% if f.division_id|string == e.id|string %}selected{% endif %}>{{ e.nombre }}</option>{% endfor %}</select></div>
+  <div class="field actions-inline"><noscript><button class="btn btn-primary" type="submit">Aplicar</button></noscript><a class="btn" href="{{ url_for('main.inicio') }}">Restablecer</a></div>
+</div></form>
+
+<div class="kpis">
+  <a class="kpi" href="{{ url_for('alumnos.lista') }}"><div class="n">{{ k.total_alumnos }}</div><div class="l">Alumnos</div></a>
+  <div class="kpi violet"><div class="n">{{ k.deben_pp }}</div><div class="l">Deben realizar prácticas</div></div>
+  <div class="kpi teal"><div class="n">{{ k.asignados }}</div><div class="l">Con práctica asignada</div></div>
+  <div class="kpi red"><div class="n">{{ k.sin_asignar }}</div><div class="l">Sin práctica asignada</div></div>
+  <a class="kpi" href="{{ url_for('practicas.lista', estado='En curso') }}"><div class="n">{{ k.en_curso }}</div><div class="l">Prácticas en curso</div></a>
+  <div class="kpi violet"><div class="n">{{ k.finalizadas }}</div><div class="l">Prácticas finalizadas</div></div>
+  <div class="kpi green"><div class="n">{{ k.aprobadas }}</div><div class="l">Prácticas aprobadas</div></div>
+  <div class="kpi amber"><div class="n">{{ k.pendientes }}</div><div class="l">Prácticas pendientes de iniciar</div></div>
+  <a class="kpi green" href="{{ url_for('empresas.lista', activa=1) }}"><div class="n">{{ k.empresas_activas }}</div><div class="l">Empresas activas</div></a>
+  <div class="kpi teal"><div class="n">{{ k.vacantes }}</div><div class="l">Vacantes disponibles</div></div>
+  <a class="kpi red" href="{{ url_for('documentos.control', estado='Incompleta') }}"><div class="n">{{ k.docs_incompletas }}</div><div class="l">Alumnos con documentación incompleta</div></a>
+  <a class="kpi amber" href="{{ url_for('seguimiento.inicio', pendientes=1) }}"><div class="n">{{ k.horas_pendientes }}</div><div class="l">Alumnos con horas pendientes</div></a>
+</div>
+<p class="small muted">Las prácticas se cuentan por alumno (una práctica con 3 alumnos suma 3). «Alumnos» y «Deben realizar» se filtran por año de cursada; las prácticas, por año lectivo de la práctica.</p>
+
+<div class="grid cols-2">
+  <div class="card"><h2>Prácticas por estado</h2><div class="chart">{{ k.chart_estado }}</div></div>
+  <div class="card"><h2>Situación de las prácticas</h2><div class="chart">{{ k.chart_situacion }}</div></div>
+  <div class="card"><h2>Alumnos que deben realizar PP, por especialidad</h2><div class="chart">{{ k.chart_esp }}</div></div>
+  <div class="card"><h2>Cumplimiento de horas por especialidad</h2><div class="chart">{{ k.chart_cumpl }}</div></div>
+</div>
+
+<div class="card"><h2>Alertas <a class="btn btn-sm" href="{{ url_for('main.alertas') }}">Ver todas</a></h2>
+  <div class="kpis" style="margin:0">
+    <a class="kpi red" href="{{ url_for('main.alertas') }}#docs"><div class="n">{{ al.docs|length }}</div><div class="l">Documentación pendiente</div></a>
+    <a class="kpi amber" href="{{ url_for('main.alertas') }}#venc"><div class="n">{{ al.vencimientos|length }}</div><div class="l">Prácticas por vencer / vencidas</div></a>
+    <a class="kpi amber" href="{{ url_for('main.alertas') }}#horas"><div class="n">{{ al.horas|length }}</div><div class="l">Horas insuficientes</div></a>
+    <a class="kpi green" href="{{ url_for('main.alertas') }}#fin"><div class="n">{{ al.completas|length }}</div><div class="l">Listas para finalizar</div></a>
+  </div></div>
+{% else %}
+<div class="card"><p>Su perfil no incluye el panel de estadísticas. Utilice el menú lateral para acceder a sus módulos.</p></div>
+{% endif %}
+{% endblock %}

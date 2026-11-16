@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon, csrf %}
+{% set title = 'Importar alumnos' %}
+{% block content %}
+<div class="page-head"><h1>Importar alumnos desde Excel</h1>
+  <div class="head-actions"><a class="btn" href="{{ url_for('alumnos.plantilla') }}">{{ icon('download', 16) }} Descargar plantilla</a>
+  <a class="btn" href="{{ url_for('alumnos.lista') }}">{{ icon('back', 16) }} Volver</a></div></div>
+<div class="grid cols-2">
+  <div class="card">
+    <h2>Cargar archivo</h2>
+    <form method="post" enctype="multipart/form-data" class="form-grid one">
+      {{ csrf() }}
+      <div class="field"><label for="archivo">Archivo Excel (.xlsx)</label><input id="archivo" type="file" name="archivo" accept=".xlsx" required></div>
+      <label class="check" style="padding-top:0"><input type="checkbox" name="solo_validar" value="1" checked> Sólo validar (no guarda datos)</label>
+      <div class="form-actions" style="margin-top:.2rem"><button class="btn btn-primary" type="submit">{{ icon('upload', 16) }} Procesar archivo</button></div>
+    </form>
+  </div>
+  <div class="card">
+    <h2>Cómo funciona</h2>
+    <ul>
+      <li>La primera fila debe contener los encabezados. Use la plantilla para evitar errores.</li>
+      <li>Obligatorios: <strong>Legajo, Apellido, Nombre, DNI y Curso</strong>.</li>
+      <li>Si el DNI ya existe, el alumno se <strong>actualiza</strong>; si no, se <strong>crea</strong>.</li>
+      <li>Curso, división y especialidad deben existir en los catálogos.</li>
+      <li>Se recomienda ejecutar primero en modo «sólo validar».</li>
+    </ul>
+    <p class="small muted">Columnas reconocidas: {{ cols|map(attribute=1)|join(', ') }}.</p>
+  </div>
+</div>
+{% if res %}
+<div class="card">
+  <h2>Resultado</h2>
+  <div class="kpis">
+    <div class="kpi"><div class="n">{{ res.total }}</div><div class="l">Filas leídas</div></div>
+    <div class="kpi green"><div class="n">{{ res.creados }}</div><div class="l">Alumnos creados</div></div>
+    <div class="kpi teal"><div class="n">{{ res.actualizados }}</div><div class="l">Alumnos actualizados</div></div>
+    <div class="kpi red"><div class="n">{{ res.errores|length }}</div><div class="l">Filas con errores</div></div>
+  </div>
+  {% if res.errores %}
+  <div class="table-wrap"><table class="table compact"><thead><tr><th>Fila</th><th>Problema</th></tr></thead><tbody>
+    {% for n, msg in res.errores %}<tr><td>{{ n }}</td><td>{{ msg }}</td></tr>{% endfor %}
+  </tbody></table></div>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

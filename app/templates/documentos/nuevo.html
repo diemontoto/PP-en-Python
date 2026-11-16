@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon, csrf %}
+{% set title = 'Subir documento' %}
+{% block content %}
+<div class="page-head"><h1>Subir documento</h1><div class="head-actions"><a class="btn" href="{{ next or url_for('documentos.lista') }}">{{ icon('back', 15) }} Volver</a></div></div>
+<form method="post" enctype="multipart/form-data" class="card">{{ csrf() }}{% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+  <div class="form-grid">
+    <div class="field span-2"><label for="tipo">Tipo de documento <span class="req">*</span></label>
+      <select id="tipo" name="tipo_documento_id" required><option value="">— Seleccione —</option>
+        {% for t in tipos %}<option value="{{ t.id }}" {% if values.tipo_documento_id == t.id|string %}selected{% endif %}>{{ t.nombre }} · {{ {'alumno': 'del alumno', 'practica': 'de la práctica', 'empresa': 'de la empresa'}[t.ambito] }}{% if t.obligatorio %} (obligatorio){% endif %}</option>{% endfor %}</select></div>
+    <div class="field"><label for="alumno">Alumno</label><select id="alumno" name="alumno_id"><option value="">—</option>{% for a in alumnos %}<option value="{{ a.id }}" {% if values.alumno_id == a.id|string %}selected{% endif %}>{{ a.n }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="practica">Práctica</label><select id="practica" name="practica_id"><option value="">—</option>{% for p in practicas %}<option value="{{ p.id }}" {% if values.practica_id == p.id|string %}selected{% endif %}>{{ p.n }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="empresa">Empresa</label><select id="empresa" name="empresa_id"><option value="">—</option>{% for e in empresas %}<option value="{{ e.id }}" {% if values.empresa_id == e.id|string %}selected{% endif %}>{{ e.nombre }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="venc">Vencimiento (si corresponde)</label><input id="venc" type="date" name="vencimiento" value="{{ values.vencimiento }}"><small class="help">Útil para seguros y coberturas: el sistema avisa cuando vencen.</small></div>
+    <div class="field span-2"><label for="archivo">Archivo <span class="req">*</span></label><input id="archivo" type="file" name="archivo" required accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"><small class="help">PDF, Word, Excel o imagen. Máximo 15 MB. Complete sólo el vínculo que corresponde al tipo elegido.</small></div>
+    <div class="field span-2"><label for="obs">Observaciones</label><textarea id="obs" name="observaciones" rows="2" maxlength="500">{{ values.observaciones }}</textarea></div>
+  </div>
+  <div class="form-actions"><button class="btn btn-primary" type="submit">{{ icon('upload', 16) }} Subir</button><a class="btn" href="{{ next or url_for('documentos.lista') }}">Cancelar</a></div>
+</form>
+{% endblock %}

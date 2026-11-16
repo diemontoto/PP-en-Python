@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon %}
+{% set title = 'Informes y estadísticas' %}
+{% block content %}
+<div class="page-head"><div><h1>Informes y estadísticas</h1><p class="muted">Cada informe puede consultarse en pantalla y exportarse a PDF o Excel, con encabezado institucional, fecha de emisión y filtros aplicados.</p></div></div>
+<div class="grid cols-3">
+{% for clave, titulo, desc in reportes %}
+  <a class="card" href="{{ url_for('informes.ver', clave=clave) }}" style="color:inherit;margin:0"><h2>{{ icon('chart', 18) }} {{ titulo }}</h2><p class="muted" style="margin:0">{{ desc }}</p></a>
+{% endfor %}
+</div>
+{% endblock %}

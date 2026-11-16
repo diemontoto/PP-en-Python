@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon, csrf, post_button %}
+{% set title = d.docente %}
+{% block content %}
+<div class="page-head">
+  <div><h1>{{ d.docente }}</h1><p class="muted">DNI {{ d.dni }} · {{ d.especialidad or 'Sin especialidad' }} · {{ d.cargo or '' }} · {{ 'Activo' if d.activo else 'Inactivo' }}</p></div>
+  <div class="head-actions">
+    {% if can('docentes.editar') %}<a class="btn" href="{{ url_for('docentes.editar', id=d.id) }}">{{ icon('edit', 16) }} Editar</a>{% endif %}
+    <a class="btn" href="{{ url_for('docentes.lista') }}">{{ icon('back', 16) }} Listado</a>
+  </div>
+</div>
+<div class="card"><dl class="kv"><dt>Correo</dt><dd>{{ d.email or '—' }}</dd><dt>Teléfono</dt><dd>{{ d.telefono or '—' }}</dd></dl></div>
+
+<div class="card">
+  <h2>Alumnos asignados
+    <form method="get" class="inline"><select name="ciclo_id" data-autosubmit>{% for c in ciclos %}<option value="{{ c.id }}" {% if c.id == ciclo_id %}selected{% endif %}>Ciclo {{ c.anio }}</option>{% endfor %}</select></form>
+  </h2>
+  <div class="table-wrap"><table class="table compact"><thead><tr><th>Alumno</th><th>DNI</th><th>Curso</th><th>Especialidad</th><th></th></tr></thead><tbody>
+  {% for a in asignados %}<tr><td><a href="{{ url_for('alumnos.ficha', id=a.id) }}">{{ a.alumno }}</a></td><td>{{ a.dni }}</td><td>{{ a.curso }} {{ a.division or '' }}</td><td>{{ a.especialidad or '' }}</td>
+    <td class="actions">{% if can('docentes.editar') %}{{ post_button(url_for('docentes.quitar', id=d.id, asig_id=a.asig_id), '', 'trash', 'btn-sm btn-danger-outline', '¿Quitar este alumno del tutor?') }}{% endif %}</td></tr>
+  {% else %}<tr><td colspan="5" class="empty">Sin alumnos asignados en este ciclo.</td></tr>{% endfor %}
+  </tbody></table></div>
+</div>
+
+{% if can('docentes.editar') and candidatos %}
+<div class="card">
+  <h2>Asignar alumnos</h2>
+  <form method="post" action="{{ url_for('docentes.asignar', id=d.id) }}">
+    {{ csrf() }}<input type="hidden" name="ciclo_id" value="{{ ciclo_id }}">
+    <div class="filter-row" style="margin-bottom:.6rem">
+      <div class="field grow"><label for="bf">Filtrar lista</label><input id="bf" type="search" data-filter-list="#cand" placeholder="Apellido, curso, especialidad…"></div>
+      <div class="field actions-inline"><button type="button" class="btn btn-sm" data-check-all="#cand" data-state="1">Marcar visibles</button><button type="button" class="btn btn-sm" data-check-all="#cand" data-state="0">Desmarcar</button></div>
+    </div>
+    <div class="checklist" id="cand">{% for a in candidatos %}<label><input type="checkbox" name="alumno_ids" value="{{ a.id }}"> {{ a.alumno }} <span class="muted small">· {{ a.curso }} {{ a.division or '' }} · {{ a.especialidad or 'sin especialidad' }}</span></label>{% endfor %}</div>
+    <div class="form-actions"><button class="btn btn-primary" type="submit">{{ icon('check', 16) }} Asignar seleccionados</button></div>
+  </form>
+</div>
+{% endif %}
+
+<div class="card"><h2>Prácticas a cargo</h2>
+  {% if practicas %}<div class="table-wrap"><table class="table compact"><thead><tr><th>N°</th><th>Año</th><th>Empresa</th><th>Proyecto</th><th>Alumnos</th><th>Estado</th></tr></thead><tbody>
+    {% for p in practicas %}<tr><td><a href="{{ url_for('practicas.ficha', id=p.id) }}">{{ p.numero }}</a></td><td>{{ p.anio }}</td><td>{{ p.empresa }}</td><td>{{ p.proyecto }}</td><td>{{ p.n }}</td><td>{{ p.estado|badge }}</td></tr>{% endfor %}
+  </tbody></table></div>{% else %}<p class="muted">Sin prácticas a cargo.</p>{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon %}
+{% set title = 'Alertas' %}
+{% macro lista(rows, vacio) %}
+{% if rows %}<div class="table-wrap"><table class="table compact"><thead><tr><th>Alumno</th><th>Práctica</th><th>Empresa</th><th>Alerta</th><th></th></tr></thead><tbody>
+{% for r in rows %}<tr><td><a href="{{ url_for('alumnos.ficha', id=r.alumno_id) }}">{{ r.alumno }}</a><div class="small muted">{{ r.curso }} {{ r.division or '' }}</div></td>
+ <td><a href="{{ url_for('practicas.ficha', id=r.practica_id) }}">{{ r.numero }}</a> {{ r.estado|badge }}</td><td>{{ r.empresa }}</td><td>{{ r.motivo }}</td>
+ <td class="actions"><a class="btn btn-sm" href="{{ url_for('seguimiento.detalle', ap_id=r.ap_id) }}">{{ icon('clock', 14) }}</a></td></tr>{% endfor %}
+</tbody></table></div>{% else %}<p class="muted">{{ vacio }}</p>{% endif %}
+{% endmacro %}
+{% block content %}
+<div class="page-head"><div><h1>Alertas</h1><p class="muted">Situaciones que requieren atención.</p></div>
+  <form method="get" class="head-actions"><select name="ciclo_id" data-autosubmit><option value="">Todos los ciclos</option>{% for c in ciclos %}<option value="{{ c.id }}" {% if ciclo_id|string == c.id|string %}selected{% endif %}>Ciclo {{ c.anio }}</option>{% endfor %}</select></form></div>
+<div class="card" id="docs"><h2>Documentación pendiente <span class="badge badge-red">{{ al.docs|length }}</span></h2>{{ lista(al.docs, 'Sin alertas de documentación.') }}</div>
+<div class="card" id="venc"><h2>Vencimiento de prácticas <span class="badge badge-amber">{{ al.vencimientos|length }}</span></h2>{{ lista(al.vencimientos, 'No hay prácticas próximas a vencer.') }}</div>
+<div class="card" id="horas"><h2>Horas insuficientes <span class="badge badge-amber">{{ al.horas|length }}</span></h2>{{ lista(al.horas, 'Sin alertas de horas.') }}</div>
+<div class="card" id="fin"><h2>Listas para finalizar <span class="badge badge-green">{{ al.completas|length }}</span></h2>{{ lista(al.completas, 'Ninguna práctica pendiente de cierre.') }}</div>
+{% endblock %}

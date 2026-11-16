@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import csrf %}
+{% set title = 'Cambiar contraseña' %}
+{% block content %}
+<div class="page-head"><h1>Cambiar contraseña</h1></div>
+{% if forzado %}<div class="flash flash-warning">Por seguridad debe establecer una nueva contraseña antes de continuar.</div>{% endif %}
+<div class="card narrow">
+  <form method="post" class="form-grid one">
+    {{ csrf() }}
+    <div class="field"><label for="actual">Contraseña actual</label><input id="actual" name="actual" type="password" required autocomplete="current-password"></div>
+    <div class="field"><label for="nueva">Nueva contraseña</label><input id="nueva" name="nueva" type="password" required autocomplete="new-password">
+      <small class="help">Mínimo 8 caracteres, combinando letras y números.</small></div>
+    <div class="field"><label for="repetir">Repetir nueva contraseña</label><input id="repetir" name="repetir" type="password" required autocomplete="new-password"></div>
+    <div class="form-actions"><button class="btn btn-primary" type="submit">Guardar contraseña</button></div>
+  </form>
+</div>
+{% endblock %}

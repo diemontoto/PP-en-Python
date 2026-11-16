@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon, csrf, post_button %}
+{% set title = 'Copias de seguridad' %}
+{% block content %}
+<div class="page-head"><div><h1>Copias de seguridad</h1><p class="muted">Cada copia incluye la base de datos completa y todos los documentos adjuntos.</p></div>
+  <div class="head-actions">{{ post_button(url_for('admin.respaldo_crear'), 'Crear copia ahora', 'plus', 'btn btn-primary') }}<a class="btn" href="{{ url_for('admin.configuracion') }}">{{ icon('back', 15) }} Configuración</a></div></div>
+<div class="card flush"><div class="table-wrap"><table class="table"><thead><tr><th>Archivo</th><th>Fecha</th><th>Tamaño</th><th></th></tr></thead><tbody>
+{% for b in copias %}<tr><td>{{ b.nombre }}</td><td>{{ b.fecha|fechahora }}</td><td>{{ (b.tamano / 1024 / 1024)|round(2) }} MB</td>
+  <td class="actions"><a class="btn btn-sm" href="{{ url_for('admin.respaldo_descargar', name=b.nombre) }}">{{ icon('download', 14) }} Descargar</a>
+  {{ post_button(url_for('admin.respaldo_eliminar', name=b.nombre), '', 'trash', 'btn-sm btn-danger-outline', '¿Eliminar esta copia?') }}</td></tr>
+{% else %}<tr><td colspan="4" class="empty">Todavía no hay copias. Cree la primera.</td></tr>{% endfor %}
+</tbody></table></div></div>
+<div class="card"><h2>Restaurar una copia</h2>
+  <div class="flash flash-warning">La restauración <strong>reemplaza todos los datos actuales</strong> por los de la copia. Antes se genera automáticamente una copia «antes_de_restaurar» del estado actual. Se cerrará su sesión.</div>
+  <form method="post" action="{{ url_for('admin.respaldo_restaurar') }}" enctype="multipart/form-data" class="form-grid">{{ csrf() }}
+    <div class="field"><label for="nombre">Copia guardada en el servidor</label><select id="nombre" name="nombre"><option value="">— Ninguna —</option>{% for b in copias %}<option>{{ b.nombre }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="archivo">…o suba un archivo ZIP de respaldo</label><input id="archivo" type="file" name="archivo" accept=".zip"></div>
+    <div class="field"><label for="confirmar">Escriba RESTAURAR para confirmar</label><input id="confirmar" name="confirmar" autocomplete="off"></div>
+    <div class="field actions-inline" style="align-self:end"><button class="btn btn-danger" type="submit">{{ icon('restore', 16) }} Restaurar</button></div>
+  </form></div>
+<div class="card"><h2>Copias automáticas</h2><p>Programe una tarea diaria en el servidor: <code>python manage.py backup --keep 30</code> (ver el manual de instalación). Guarde además una copia fuera del servidor.</p></div>
+{% endblock %}

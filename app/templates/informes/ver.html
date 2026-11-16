@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon %}
+{% set title = titulo %}
+{% block content %}
+<div class="page-head"><div><h1>{{ titulo }}</h1><p class="muted">{{ desc }}</p></div>
+  <div class="head-actions">
+    <a class="btn" href="{{ url_for('informes.pdf', clave=clave, **request.args.to_dict()) }}" target="_blank">{{ icon('file', 16) }} PDF</a>
+    <a class="btn btn-primary" href="{{ url_for('informes.excel', clave=clave, **request.args.to_dict()) }}">{{ icon('download', 16) }} Excel</a>
+    <a class="btn" href="{{ url_for('informes.inicio') }}">{{ icon('back', 16) }} Informes</a></div></div>
+<form class="filters card" method="get"><div class="filter-row">
+  {% for p in permitidos %}
+  <div class="field"><label for="i_{{ p }}">{{ etiquetas[p] }}</label>
+    {% if p in ('desde', 'hasta') %}<input id="i_{{ p }}" type="date" name="{{ p }}" value="{{ f[p] }}">
+    {% else %}
+    <select id="i_{{ p }}" name="{{ p }}"><option value="">Todos</option>
+      {% if p == 'ciclo_id' %}{% for c in ciclos %}<option value="{{ c.id }}" {% if f[p]|string == c.id|string %}selected{% endif %}>{{ c.anio }}</option>{% endfor %}
+      {% elif p == 'especialidad_id' %}{% for c in especialidades %}<option value="{{ c.id }}" {% if f[p]|string == c.id|string %}selected{% endif %}>{{ c.nombre }}</option>{% endfor %}
+      {% elif p == 'curso_id' %}{% for c in cursos %}<option value="{{ c.id }}" {% if f[p]|string == c.id|string %}selected{% endif %}>{{ c.nombre }}</option>{% endfor %}
+      {% elif p == 'division_id' %}{% for c in divisiones %}<option value="{{ c.id }}" {% if f[p]|string == c.id|string %}selected{% endif %}>{{ c.nombre }}</option>{% endfor %}
+      {% elif p == 'empresa_id' %}{% for c in empresas %}<option value="{{ c.id }}" {% if f[p]|string == c.id|string %}selected{% endif %}>{{ c.nombre }}</option>{% endfor %}
+      {% elif p == 'tutor_id' %}{% for c in docentes %}<option value="{{ c.id }}" {% if f[p]|string == c.id|string %}selected{% endif %}>{{ c.nombre }}</option>{% endfor %}
+      {% elif p == 'estado' %}{% for c in estados %}<option {% if f[p] == c %}selected{% endif %}>{{ c }}</option>{% endfor %}{% endif %}
+    </select>{% endif %}</div>
+  {% endfor %}
+  <div class="field actions-inline"><button class="btn btn-primary" type="submit">{{ icon('search', 15) }} Aplicar filtros</button><a class="btn" href="{{ url_for('informes.ver', clave=clave, ciclo_id='') }}">Quitar filtros</a></div>
+</div></form>
+<div class="card flush"><div class="table-wrap"><table class="table compact"><thead><tr>{% for c in cols %}<th>{{ c[0] }}</th>{% endfor %}</tr></thead><tbody>
+{% for r in rows %}<tr>{% for v in r %}<td>{{ v }}</td>{% endfor %}</tr>{% else %}<tr><td colspan="{{ cols|length }}" class="empty">Sin resultados con los filtros aplicados.</td></tr>{% endfor %}
+</tbody></table></div>
+<div class="table-foot"><span>{{ total }} registro(s){% if truncado %} — se muestran los primeros 500; el PDF y el Excel incluyen todos{% endif %}</span><span>{{ extra|join(' · ') }}</span></div></div>
+{% endblock %}

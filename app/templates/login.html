@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Ingresar · Prácticas Profesionalizantes</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%231f3a68%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-size=%2716%27 font-family=%27Arial%27 font-weight=%27bold%27 fill=%27white%27 text-anchor=%27middle%27%3EPP%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body class="login-body">
+  <main class="login-card">
+    <div class="brand-logo big">PP</div>
+    <h1>Prácticas Profesionalizantes</h1>
+    <p class="muted">{{ escuela.get('escuela_nombre', '') }}</p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}<div class="flash flash-{{ cat }}" role="alert">{{ msg }}</div>{% endfor %}
+    {% endwith %}
+    <form method="post" autocomplete="off">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <div class="field"><label for="username">Usuario</label>
+        <input id="username" name="username" type="text" required autofocus autocomplete="username"></div>
+      <div class="field"><label for="password">Contraseña</label>
+        <input id="password" name="password" type="password" required autocomplete="current-password"></div>
+      <button class="btn btn-primary btn-block" type="submit">Ingresar</button>
+    </form>
+    <p class="small muted center">Acceso restringido al personal autorizado. Las operaciones quedan registradas.</p>
+  </main>
+</body>
+</html>

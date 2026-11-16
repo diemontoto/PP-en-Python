@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon, csrf %}
+{% set title = 'Roles y permisos' %}
+{% block content %}
+<div class="page-head"><div><h1>Roles y permisos</h1><p class="muted">Los permisos se verifican en el servidor en cada operación. El Administrador siempre tiene acceso completo.</p></div>
+  <div class="head-actions"><a class="btn" href="{{ url_for('admin.configuracion') }}">{{ icon('back', 15) }} Configuración</a></div></div>
+<div class="flash flash-info">Los usuarios con perfil «Docente tutor» sólo acceden a los alumnos y prácticas que tienen asignados, sin importar los permisos marcados.</div>
+<form method="post" class="card flush">{{ csrf() }}
+<div class="table-wrap"><table class="table compact"><thead><tr><th>Permiso</th>{% for r in roles %}<th class="center">{{ r.nombre }}</th>{% endfor %}</tr></thead><tbody>
+{% for mod, perms in modulos.items() %}
+  <tr><td colspan="{{ roles|length + 1 }}" style="background:#f7f9fc"><strong>{{ nombres.get(mod, mod) }}</strong></td></tr>
+  {% for p in perms %}<tr><td>{{ p.descripcion }} <span class="muted small">({{ p.codigo }})</span></td>
+    {% for r in roles %}<td class="center"><input type="checkbox" name="p_{{ r.id }}_{{ p.id }}" {% if r.codigo == 'admin' or (r.id, p.id) in actuales %}checked{% endif %}
+      {% if r.codigo == 'admin' or not can('configuracion.editar') %}disabled{% endif %} aria-label="{{ r.nombre }}: {{ p.codigo }}"></td>{% endfor %}</tr>{% endfor %}
+{% endfor %}
+</tbody></table></div>
+{% if can('configuracion.editar') %}<div class="form-actions" style="padding:0 1.2rem 1.2rem"><button class="btn btn-primary" type="submit">{{ icon('check', 16) }} Guardar permisos</button></div>{% endif %}
+</form>
+{% endblock %}

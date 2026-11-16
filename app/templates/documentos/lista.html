@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import icon, post_button %}
+{% set title = 'Documentación' %}
+{% block content %}
+<div class="page-head"><div><h1>Documentación</h1><p class="muted">Repositorio digital de convenios, autorizaciones, seguros y demás documentos.</p></div>
+  <div class="head-actions"><a class="btn" href="{{ url_for('documentos.control') }}">{{ icon('check', 16) }} Control documental</a>
+    {% if can('documentos.editar') %}<a class="btn btn-primary" href="{{ url_for('documentos.nuevo') }}">{{ icon('upload', 16) }} Subir documento</a>{% endif %}</div></div>
+<form class="filters card" method="get"><div class="filter-row">
+  <div class="field grow"><label for="q">Buscar</label><input id="q" type="search" name="q" value="{{ args.get('q', '') }}" placeholder="Archivo, alumno, DNI, empresa o práctica"></div>
+  <div class="field"><label>Tipo</label><select name="tipo"><option value="">Todos</option>{% for t in tipos %}<option value="{{ t.id }}" {% if args.get('tipo') == t.id|string %}selected{% endif %}>{{ t.nombre }}</option>{% endfor %}</select></div>
+  <div class="field"><label>Estado</label><select name="estado"><option value="">Todos</option>{% for e in estados %}<option {% if args.get('estado') == e %}selected{% endif %}>{{ e }}</option>{% endfor %}</select></div>
+  <div class="field"><label>Empresa</label><select name="empresa"><option value="">Todas</option>{% for e in empresas %}<option value="{{ e.id }}" {% if args.get('empresa') == e.id|string %}selected{% endif %}>{{ e.nombre }}</option>{% endfor %}</select></div>
+  <label class="check"><input type="checkbox" name="vencidos" value="1" {% if args.get('vencidos') == '1' %}checked{% endif %}> Sólo vencidos</label>
+  <div class="field actions-inline"><button class="btn btn-primary" type="submit">{{ icon('search', 15) }} Filtrar</button><a class="btn" href="{{ url_for('documentos.lista') }}">Limpiar</a></div>
+</div></form>
+<div class="card flush"><div class="table-wrap"><table class="table"><thead><tr><th>Tipo</th><th>Archivo</th><th>Vinculado a</th><th>Estado</th><th>Vence</th><th>Cargado</th><th></th></tr></thead><tbody>
+{% for d in rows %}<tr>
+  <td>{{ d.tipo }}</td><td><a href="{{ url_for('documentos.descargar', id=d.id) }}">{{ icon('file', 14) }} {{ d.nombre_original }}</a><div class="small muted">{{ (d.tamano / 1024)|round|int }} KB</div></td>
+  <td>{% if d.alumno %}<a href="{{ url_for('alumnos.ficha', id=d.alumno_id) }}">{{ d.alumno }}</a><br>{% endif %}{% if d.practica %}<a href="{{ url_for('practicas.ficha', id=d.practica_id) }}">{{ d.practica }}</a><br>{% endif %}{% if d.empresa %}<a href="{{ url_for('empresas.ficha', id=d.empresa_id) }}">{{ d.empresa }}</a>{% endif %}</td>
+  <td>{{ d.estado|badge }}{% if d.observaciones %}<div class="small muted">{{ d.observaciones }}</div>{% endif %}</td>
+  <td>{{ d.vencimiento|fecha }}{% if d.vencimiento and d.vencimiento < hoy %} <span class="badge badge-red">Vencido</span>{% endif %}</td>
+  <td>{{ d.creado_en|fechahora }}<div class="small muted">{{ d.cargado_por or '' }}</div></td>
+  <td class="actions">{% if can('documentos.editar') %}{% if d.estado != 'Aprobado' %}{{ post_button(url_for('documentos.estado', id=d.id), '', 'check', 'btn-sm', title='Aprobar') | replace('name="next"', 'name="x"') }}{% endif %}<a class="btn btn-sm" href="{{ url_for('documentos.editar', id=d.id) }}" title="Revisar / editar">{{ icon('edit', 14) }}</a>{% endif %}
+    {% if can('documentos.eliminar') %}{{ post_button(url_for('documentos.baja', id=d.id), '', 'trash', 'btn-sm btn-danger-outline', '¿Dar de baja este documento?') }}{% endif %}</td></tr>
+{% else %}<tr><td colspan="7" class="empty">No se encontraron documentos.</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}
