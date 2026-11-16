@@ -151,6 +151,7 @@ def run(force=False):
                 if ok:
                     _doc(tipos["Constancia de alumno regular"], "constancia.pdf", alumno_id=aid)
                     _doc(tipos["Acuerdo individual"], "acuerdo.pdf", practica_id=pid)
+<<<<<<< HEAD
             # inasistencias: las horas corren solas los días de práctica; sólo se cargan las faltas
             if esc in ("aprobada", "desaprobada", "curso_ok", "curso_atrasada", "suspendida"):
                 d, ultimo = ini, min(hoy, fin)
@@ -164,6 +165,23 @@ def run(force=False):
             if esc == "suspendida":
                 ex("INSERT INTO dias_sin_actividad(fecha_desde, motivo, alumno_practica_id) VALUES (?,?,?)",
                    ((hoy - timedelta(days=6)).isoformat(), "Suspensión", apid), commit=False)
+=======
+            # asistencias
+            total = {"aprobada": 200, "desaprobada": 200, "curso_ok": 85, "curso_atrasada": 30, "suspendida": 50}.get(esc, 0)
+            acum, d = 0, ini
+            while acum < total and d <= hoy:
+                if d.weekday() < 5:
+                    h = min(4, total - acum)
+                    if rng.random() < 0.06:
+                        ex("INSERT INTO asistencias(alumno_practica_id, fecha, tipo, horas, observaciones) VALUES (?,?,?,0,?)",
+                           (apid, d.isoformat(), "Ausente justificado", "Certificado médico"), commit=False)
+                    else:
+                        ent = datetime.combine(d, datetime.min.time()).replace(hour=8)
+                        ex("INSERT INTO asistencias(alumno_practica_id, fecha, tipo, hora_entrada, hora_salida, horas) VALUES (?,?,?,?,?,?)",
+                           (apid, d.isoformat(), "Presente", "08:00", (ent + timedelta(hours=h)).strftime("%H:%M"), h), commit=False)
+                        acum += h
+                d += timedelta(days=1)
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
             if esc in ("aprobada", "desaprobada", "curso_ok"):
                 ex("INSERT INTO seguimiento(practica_id, alumno_practica_id, fecha, tipo, docente_id, descripcion) VALUES (?,?,?,?,?,?)",
                    (pid, apid, (ini + timedelta(days=10)).isoformat(), "Visita", tutor, "Visita a la empresa. El alumno se desempeña de acuerdo a lo planificado."), commit=False)

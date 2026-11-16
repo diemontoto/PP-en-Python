@@ -192,9 +192,14 @@ def informe_evaluacion(ap_id):
                        ("Docente tutor", ap["tutor"]), ("Referente de la empresa", ref["nombre"] if ref else None),
                        ("Inicio", fecha(ap["ap_inicio"] or ap["fecha_inicio"])), ("Finalización", fecha(ap["ap_fin"]))]),
              P("Cumplimiento de horas", H2),
+<<<<<<< HEAD
              kv_table([("Horas requeridas", ap["horas_requeridas"]), ("Horas cumplidas", num(ap["horas_realizadas"])),
                        ("Cumplimiento", f"{num(ap['porcentaje'])} %"), ("Horas descontadas por inasistencias", num(ap["horas_descontadas"])),
                        ("Días de práctica", ap["dias_programados"]), ("Faltas injustificadas", ap["faltas_injust"]),
+=======
+             kv_table([("Horas requeridas", ap["horas_requeridas"]), ("Horas realizadas", num(ap["horas_realizadas"])),
+                       ("Cumplimiento", f"{num(ap['porcentaje'])} %"), ("Faltas injustificadas", ap["faltas_injust"]),
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
                        ("Días asistidos", ap["dias_presente"]), ("Faltas justificadas", ap["faltas_just"])]),
              P("Evaluación por criterios (escala 1 a 10)", H2)]
     t, r = evals.get("Tutor"), evals.get("Referente")

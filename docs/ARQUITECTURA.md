@@ -58,7 +58,11 @@ erDiagram
     REFERENTES_EMPRESAS ||--o{ PRACTICAS : "referente"
     PRACTICAS ||--o{ ALUMNOS_PRACTICAS : "incluye"
     ALUMNOS ||--o{ ALUMNOS_PRACTICAS : "participa"
+<<<<<<< HEAD
     ALUMNOS_PRACTICAS ||--o{ ASISTENCIAS : "inasistencias"
+=======
+    ALUMNOS_PRACTICAS ||--o{ ASISTENCIAS : "registra"
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
     ALUMNOS_PRACTICAS ||--o{ EVALUACIONES : "evaluada por tutor y referente"
     PRACTICAS ||--o{ SEGUIMIENTO : "visitas y contactos"
     DOCENTES ||--o{ SEGUIMIENTO : "realiza"
@@ -98,6 +102,7 @@ Reglas automáticas (en `services.py` y `views/practicas.py`):
 4. Cuando todas las asignaciones de una práctica tienen resultado, la práctica refleja el resultado.
 5. Al agregar alumnos se avisa si se supera la cantidad de vacantes de la empresa.
 
+<<<<<<< HEAD
 ### Asistencia automática (v1.1)
 
 Las horas no se cargan: se calculan (`services.calcular_horas`).
@@ -108,6 +113,8 @@ Las horas no se cargan: se calculan (`services.calcular_horas`).
 - La tabla `dias_sin_actividad` excluye fechas: feriados y recesos generales, cierres de una práctica (`practica_id`) y suspensiones de un alumno (`alumno_practica_id`, que el sistema abre y cierra al cambiar el estado).
 - `db.migrate()` actualiza una base anterior al iniciar la aplicación (y al restaurar un respaldo): agrega las columnas, da de baja lógica los registros «Presente» y hace que las ausencias previas descuenten la jornada completa.
 
+=======
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
 ## 4. Seguridad
 
 | Amenaza | Medida |
@@ -144,7 +151,11 @@ practicas-pp/
 ├── schema.sql           DDL completo
 ├── manage.py            init-db, create-admin, seed-demo, backup, run
 ├── wsgi.py              punto de entrada de producción
+<<<<<<< HEAD
 ├── tests/test_app.py    30 pruebas de integración
+=======
+├── tests/test_app.py    26 pruebas de integración
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
 └── docs/                documentación
 ```
 
@@ -154,4 +165,8 @@ El esquema usa SQL estándar. Pasos: (1) reemplazar `INTEGER PRIMARY KEY` por `G
 
 ## 7. Mejoras incorporadas respecto del pedido
 
+<<<<<<< HEAD
 Alertas automáticas (documentación, vencimientos, ritmo de horas insuficiente, prácticas listas para cerrar); control documental por tipo con vencimientos; asistencia automática con carga de inasistencias en lote por práctica; validación de CUIT con dígito verificador; copia de una práctica a otro ciclo; búsqueda global sin acentos; importación con modo «solo validar»; restauración de registros dados de baja; matriz de permisos editable.
+=======
+Alertas automáticas (documentación, vencimientos, ritmo de horas insuficiente, prácticas listas para cerrar); control documental por tipo con vencimientos; asistencia del día en lote por práctica; validación de CUIT con dígito verificador; copia de una práctica a otro ciclo; búsqueda global sin acentos; importación con modo «solo validar»; restauración de registros dados de baja; matriz de permisos editable.
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3

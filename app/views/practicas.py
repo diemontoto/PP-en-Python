@@ -40,11 +40,15 @@ def _fields(row=None):
         F("fecha_fin_real", "Fecha real de finalización", "date"),
         F("horas_requeridas", "Horas totales requeridas", "number", required=True, min=1, max=2000,
           default=lambda: ciclo["horas_pp_default"] if ciclo else 200),
+<<<<<<< HEAD
         F("dias_semana", "Días de práctica", "weekdays", required=True, default="1,2,3,4,5",
           help="En estos días las horas de cada alumno corren automáticamente entre la fecha de inicio y la de finalización."),
         F("horas_dia", "Horas por día de práctica", "number", required=True, decimal=True, min=0.5, max=14, default=4,
           help="Jornada que se suma cada día de práctica. Sólo se cargan las inasistencias, que descuentan horas."),
         F("dias_horarios", "Horario (texto informativo)", maxlen=300, cols=2, placeholder="8:00 a 12:00"),
+=======
+        F("dias_horarios", "Días y horarios de asistencia", maxlen=300, cols=2, placeholder="Lunes a viernes, 8:00 a 12:00"),
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
         F("objetivos", "Objetivos de aprendizaje", "textarea", cols=2),
         F("actividades", "Actividades a desarrollar", "textarea", cols=2),
         F("observaciones", "Observaciones", "textarea", cols=2),
@@ -151,8 +155,12 @@ def ficha(id):
     return render_template("practicas/ficha.html", p=p, aps=aps, candidatos=candidatos, docs=docs, visitas=visitas, todos=todos,
                            estados=ESTADOS_ASIGNABLES, ciclos=services.lista_ciclos(),
                            vacantes=emp["vacantes"], ocupadas=ocup,
+<<<<<<< HEAD
                            horas_total=sum(r["horas_realizadas"] for r in aps), horas_req=sum(r["horas_requeridas"] for r in aps),
                            horas_plan=services.horas_plan(p), dias_txt=services.dias_texto(p["dias_semana"]))
+=======
+                           horas_total=sum(r["horas_realizadas"] for r in aps), horas_req=sum(r["horas_requeridas"] for r in aps))
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
 
 
 def _set_estado_ap(ap, nuevo):
@@ -164,10 +172,13 @@ def _set_estado_ap(ap, nuevo):
         sets.append("fecha_fin_real = ?")
         params.append(today())
     ex(f"UPDATE alumnos_practicas SET {', '.join(sets)} WHERE id = ?", params + [ap["ap_id"]], commit=False)
+<<<<<<< HEAD
     if nuevo == "Suspendida" and ap["estado"] != "Suspendida":
         services.abrir_suspension(ap["ap_id"])
     elif nuevo != "Suspendida" and ap["estado"] == "Suspendida":
         services.cerrar_suspension(ap["ap_id"])
+=======
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
 
 
 @bp.route("/<int:id>/estado", methods=["POST"])
@@ -272,7 +283,11 @@ def quitar_alumno(ap_id):
     tiene = q1("SELECT (SELECT COUNT(*) FROM asistencias WHERE alumno_practica_id = ? AND eliminado_en IS NULL) + "
                "(SELECT COUNT(*) FROM evaluaciones WHERE alumno_practica_id = ? AND eliminado_en IS NULL) AS n", (ap_id, ap_id))["n"]
     if tiene:
+<<<<<<< HEAD
         flash("No se puede quitar: el alumno tiene inasistencias o evaluaciones registradas. Cambie su estado a «Suspendida» si corresponde.", "danger")
+=======
+        flash("No se puede quitar: el alumno tiene asistencias o evaluaciones registradas. Cambie su estado a «Suspendida» si corresponde.", "danger")
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
     else:
         ex("UPDATE alumnos_practicas SET eliminado_en = ?, eliminado_por = ? WHERE id = ?", (now(), g.user["id"], ap_id), commit=False)
         audit("alumnos_practicas", ap_id, "baja", {"practica": ap["numero"], "alumno": ap["alumno"]})
@@ -291,11 +306,18 @@ def reutilizar(id):
         return redirect(url_for("practicas.ficha", id=id))
     numero = services.siguiente_numero(int(ciclo))
     cur = ex("""INSERT INTO practicas(numero, ciclo_id, empresa_id, especialidad_id, tutor_id, referente_id, proyecto, horas_requeridas,
+<<<<<<< HEAD
                 dias_horarios, dias_semana, horas_dia, objetivos, actividades, observaciones, estado, creado_en, creado_por)
                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'Pendiente de asignación', ?, ?)""",
              (numero, int(ciclo), p["empresa_id"], p["especialidad_id"], p["tutor_id"], p["referente_id"], p["proyecto"],
               p["horas_requeridas"], p["dias_horarios"], p["dias_semana"], p["horas_dia"], p["objetivos"], p["actividades"], p["observaciones"],
               now(), g.user["id"]), commit=False)
+=======
+                dias_horarios, objetivos, actividades, observaciones, estado, creado_en, creado_por)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?, 'Pendiente de asignación', ?, ?)""",
+             (numero, int(ciclo), p["empresa_id"], p["especialidad_id"], p["tutor_id"], p["referente_id"], p["proyecto"],
+              p["horas_requeridas"], p["dias_horarios"], p["objetivos"], p["actividades"], p["observaciones"], now(), g.user["id"]), commit=False)
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
     audit("practicas", cur.lastrowid, "crear", {"copiada_de": p["numero"], "numero": numero})
     commit()
     flash(f"Se creó la práctica {numero} a partir de {p['numero']}. Complete las fechas y asigne alumnos.", "success")

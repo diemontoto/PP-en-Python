@@ -7,7 +7,11 @@ from flask import Flask, g, render_template, request
 
 from . import auth, db, filters, services
 
+<<<<<<< HEAD
 __version__ = "1.1.0"
+=======
+__version__ = "1.0.0"
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
 
 
 def _secret_key(instance_path):
@@ -51,7 +55,10 @@ def create_app(config=None):
         con = db.connect(app.config["DATABASE"])
         init_base(con)
         con.close()
+<<<<<<< HEAD
     db.migrate(app.config["DATABASE"])
+=======
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
 
     db.init_app(app)
     filters.init_app(app)

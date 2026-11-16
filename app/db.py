@@ -54,6 +54,7 @@ def init_db(path):
     con.close()
 
 
+<<<<<<< HEAD
 def migrate(path):
     """Actualiza una base existente al esquema actual (idempotente; se ejecuta al iniciar la aplicación)."""
     con = connect(path)
@@ -89,6 +90,8 @@ def migrate(path):
         con.close()
 
 
+=======
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
 def now():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 

@@ -1,6 +1,10 @@
 """Catálogos institucionales: especialidades, cursos, divisiones, tipos de documento y ciclos lectivos."""
 from ..crud import C, Entity, F
+<<<<<<< HEAD
 from ..db import ex, q
+=======
+from ..db import ex
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
 
 DEPS_ESP = (
     ("SELECT COUNT(*) FROM alumnos WHERE especialidad_id = ? AND eliminado_en IS NULL", "alumno(s)"),
@@ -84,6 +88,7 @@ ciclos = Entity(
 )
 
 
+<<<<<<< HEAD
 def _dsa_before(vals, row, errors):
     if vals.get("fecha_desde") and "fecha_desde" not in errors:
         if not vals.get("fecha_hasta"):
@@ -117,3 +122,7 @@ dias_sin_actividad = Entity(
 
 def blueprints():
     return [e.blueprint(f"/configuracion/{e.slug}") for e in (especialidades, cursos, divisiones, tipos_documentos, ciclos, dias_sin_actividad)]
+=======
+def blueprints():
+    return [e.blueprint(f"/configuracion/{e.slug}") for e in (especialidades, cursos, divisiones, tipos_documentos, ciclos)]
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3

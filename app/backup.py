@@ -88,8 +88,11 @@ def restore_backup(app, zip_source):
                 chk.backup(dst)
             dst.close()
             chk.close()
+<<<<<<< HEAD
             from .db import migrate
             migrate(db_path)        # un respaldo anterior puede traer el esquema viejo
+=======
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
         for n in names:
             if n.startswith("uploads/") and not n.endswith("/"):
                 base = os.path.basename(n)

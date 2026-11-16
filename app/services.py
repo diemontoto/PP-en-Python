@@ -1,5 +1,9 @@
 """Reglas de negocio y consultas compartidas entre módulos."""
+<<<<<<< HEAD
 from datetime import date, datetime, timedelta
+=======
+from datetime import date, datetime
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
 
 from . import auth
 from .db import get_config, q, q1, today, ex
@@ -96,6 +100,7 @@ def vacantes_disponibles_total():
     return total
 
 
+<<<<<<< HEAD
 # ------------------------------------------------ asistencia automática
 # Las horas de cada alumno corren solas: cada día de práctica (según los días de la semana y las horas
 # diarias de la práctica) entre la fecha de inicio de la asignación y la de finalización suma la jornada.
@@ -227,15 +232,32 @@ def cerrar_suspension(ap_id):
             ex("UPDATE dias_sin_actividad SET fecha_hasta = ? WHERE id = ?", (ayer, s["id"]), commit=False)
 
 
+=======
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
 # --------------------------------------------------------- horas y alumnos
 AP_SQL = """
 SELECT ap.id AS ap_id, ap.practica_id, ap.alumno_id, ap.estado, ap.horas_requeridas,
        ap.calificacion_final, ap.resultado, ap.fecha_inicio AS ap_inicio, ap.fecha_fin_real AS ap_fin,
+<<<<<<< HEAD
+=======
+       COALESCE((SELECT SUM(s.horas) FROM asistencias s
+                 WHERE s.alumno_practica_id = ap.id AND s.eliminado_en IS NULL), 0) AS horas_realizadas,
+       (SELECT COUNT(*) FROM asistencias s WHERE s.alumno_practica_id = ap.id AND s.eliminado_en IS NULL
+          AND s.tipo = 'Presente') AS dias_presente,
+       (SELECT COUNT(*) FROM asistencias s WHERE s.alumno_practica_id = ap.id AND s.eliminado_en IS NULL
+          AND s.tipo = 'Ausente justificado') AS faltas_just,
+       (SELECT COUNT(*) FROM asistencias s WHERE s.alumno_practica_id = ap.id AND s.eliminado_en IS NULL
+          AND s.tipo = 'Ausente injustificado') AS faltas_injust,
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
        a.legajo, a.apellido, a.nombre, a.dni, a.curso_id, a.division_id, a.especialidad_id,
        a.apellido || ', ' || a.nombre AS alumno,
        c.nombre AS curso, d.nombre AS division, e.nombre AS especialidad,
        p.numero, p.ciclo_id, p.empresa_id, p.proyecto, p.fecha_inicio, p.fecha_fin_estimada,
+<<<<<<< HEAD
        p.tutor_id, p.estado AS practica_estado, p.referente_id, p.dias_semana, p.horas_dia, p.fecha_fin_real AS p_fin_real,
+=======
+       p.tutor_id, p.estado AS practica_estado, p.referente_id,
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
        em.razon_social AS empresa, ci.anio, doc.apellido || ', ' || doc.nombre AS tutor
 FROM alumnos_practicas ap
 JOIN practicas p   ON p.id = ap.practica_id AND p.eliminado_en IS NULL
@@ -283,7 +305,10 @@ def ap_rows(filtros=None, order="a.apellido, a.nombre", scoped=True, con_docs=Tr
         params += sp
     sql = AP_SQL + (" AND " + " AND ".join(where) if where else "") + f" ORDER BY {order}"
     rows = [dict(r) for r in q(sql, params)]
+<<<<<<< HEAD
     calcular_horas(rows)
+=======
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
     docs = doc_status_map(rows) if con_docs else {}
     for r in rows:
         req = r["horas_requeridas"] or 1

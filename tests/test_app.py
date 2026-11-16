@@ -232,7 +232,10 @@ class Practicas(unittest.TestCase):
 
     def _nueva(self):
         d = {"ciclo_id": 1, "empresa_id": 1, "proyecto": "Proyecto de prueba", "horas_requeridas": 10, "fecha_inicio": date.today().isoformat(),
+<<<<<<< HEAD
              "dias_semana": ["1", "2", "3", "4", "5", "6", "7"], "horas_dia": "4",
+=======
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
              "fecha_fin_estimada": (date.today() + timedelta(days=30)).isoformat()}
         r = self.c.post("/practicas/nuevo", d, page="/practicas/nuevo")
         self.assertEqual(r.status_code, 302, r.get_data(as_text=True)[:300])
@@ -255,6 +258,7 @@ class Practicas(unittest.TestCase):
         # forzar queda auditado
         self.c.post(f"/practicas/ap/{apid}/estado", {"estado": "En curso", "forzar": "1"}, page=f"/practicas/{pid}")
         self.assertEqual(scalar("SELECT estado FROM alumnos_practicas WHERE id = ?", (apid,)), "En curso")
+<<<<<<< HEAD
         # la asistencia corre sola; sólo se cargan inasistencias (y sólo en días de práctica)
         hoy = date.today().isoformat()
         self.c.post("/seguimiento/asistencias/nuevo", {"alumno_practica_id": apid, "fecha": (date.today() - timedelta(days=1)).isoformat(),
@@ -262,6 +266,17 @@ class Practicas(unittest.TestCase):
         self.assertEqual(scalar("SELECT COUNT(*) FROM asistencias WHERE alumno_practica_id = ?", (apid,)), 0)   # anterior al inicio
         self.c.post("/seguimiento/asistencias/nuevo", {"alumno_practica_id": apid, "fecha": hoy, "tipo": "Presente"}, page="/seguimiento/asistencias/nuevo")
         self.assertEqual(scalar("SELECT COUNT(*) FROM asistencias WHERE alumno_practica_id = ?", (apid,)), 0)   # ya no se cargan presentes
+=======
+        # asistencia: horas calculadas desde entrada/salida
+        hoy = date.today().isoformat()
+        self.c.post("/seguimiento/asistencias/nuevo", {"alumno_practica_id": apid, "fecha": hoy, "tipo": "Presente", "hora_entrada": "08:00", "hora_salida": "11:30"},
+                    page="/seguimiento/asistencias/nuevo")
+        self.assertEqual(scalar("SELECT horas FROM asistencias WHERE alumno_practica_id = ?", (apid,)), 3.5)
+        # salida anterior a entrada es inválida
+        self.c.post("/seguimiento/asistencias/nuevo", {"alumno_practica_id": apid, "fecha": (date.today() - timedelta(days=1)).isoformat(), "tipo": "Presente",
+                                                        "hora_entrada": "12:00", "hora_salida": "09:00"}, page="/seguimiento/asistencias/nuevo")
+        self.assertEqual(scalar("SELECT COUNT(*) FROM asistencias WHERE alumno_practica_id = ?", (apid,)), 1)
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
         self.assertEqual(self.c.get(f"/seguimiento/ap/{apid}").status_code, 200)
         # evaluación y cierre: no se aprueba con horas incompletas sin forzar
         for quien in ("Tutor", "Referente"):
@@ -277,6 +292,7 @@ class Practicas(unittest.TestCase):
         self.assertEqual(r.headers["Content-Type"], "application/pdf")
         self.assertTrue(r.data.startswith(b"%PDF"))
 
+<<<<<<< HEAD
     def _practica_en_curso(self, dias_atras=13, dias_semana=("1", "2", "3", "4", "5", "6", "7"), horas_dia="4", requeridas=100):
         """Práctica con un alumno «En curso» iniciada hace `dias_atras` días. Devuelve (practica_id, ap_id)."""
         ini = date.today() - timedelta(days=dias_atras)
@@ -390,6 +406,8 @@ class Practicas(unittest.TestCase):
         self.assertEqual(con.execute("SELECT fecha_desde, alumno_practica_id FROM dias_sin_actividad").fetchall(), [("2026-05-04", 2)])
         con.close()
 
+=======
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
     def test_alumno_no_duplicado_en_practica(self):
         pid = self._nueva()
         libre = scalar("SELECT id FROM alumnos WHERE id NOT IN (SELECT alumno_id FROM alumnos_practicas) AND eliminado_en IS NULL LIMIT 1")

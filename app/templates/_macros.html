@@ -75,6 +75,7 @@
       <input id="f_{{ f.name }}" type="text" value="{{ v if v is not none else '' }}" disabled>
     {% elif f.type == 'textarea' %}
       <textarea id="f_{{ f.name }}" name="{{ f.name }}" rows="{{ f.rows or 3 }}" {% if f.maxlen %}maxlength="{{ f.maxlen }}"{% endif %}>{{ v if v is not none else '' }}</textarea>
+<<<<<<< HEAD
     {% elif f.type == 'weekdays' %}
       {% set marcados = (v if v is not none else '')|string %}
       <div class="filter-row" id="f_{{ f.name }}" style="gap:.2rem .9rem">
@@ -82,6 +83,8 @@
         <label class="check" style="padding:0"><input type="checkbox" name="{{ f.name }}" value="{{ n }}" {% if n|string in marcados.split(',') %}checked{% endif %}> {{ d }}</label>
         {% endfor %}
       </div>
+=======
+>>>>>>> ca0eab22fac98c6a3993d3997f2efc30742cd8d3
     {% elif f.type == 'select' %}
       <select id="f_{{ f.name }}" name="{{ f.name }}" {% if f.attrs %}{% for k, a in f.attrs.items() %}{{ k }}="{{ a }}" {% endfor %}{% endif %}>
         <option value="">{{ '— Seleccione —' if f.required else '— Ninguno —' }}</option>
